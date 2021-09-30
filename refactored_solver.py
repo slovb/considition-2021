@@ -1,64 +1,120 @@
+from dataclasses import dataclass
+
+@dataclass
+class Pos:
+    x: int = 0
+    y: int = 0
+    z: int = 0
+
+    def __add__(self, other):
+        return Pos(
+            self.x + other.x,
+            self.y + other.y,
+            self.z + other.z
+        )
+
+@dataclass
+class Dimension:
+    length: int = 0
+    width: int = 0
+    height: int = 0
+
+@dataclass
+class Package:
+    id: int
+    length: int
+    width: int
+    height: int
+    weightClass: int
+    orderClass: int
+
+    def area(self) -> int:
+        return self.width * self.length
+    
+    def is_heavy(self) -> bool:
+        return self.weightClass == 2
+
+@dataclass
+class PlacedPackage:
+    pos: Pos
+    package: Package
+
+    def corners(self) -> list[Pos]:
+        positions = []
+        for x in [0, self.package.length]:
+            for y in [0, self.package.width]:
+                for z in [0, self.package.height]:
+                    addition = Pos(x, y, z)
+                    positions.append(self.pos + addition)
+        return positions
+
+    def corner(self, i: int) -> Pos:
+        return self.corners()[i]
+
+    def as_solution(self) -> dict:
+        data = {
+            "id": self.package.id,
+            "weightClass": self.package.weightClass, 
+            "orderClass": self.package.orderClass
+        }
+        for i, p in enumerate(self.corners()):
+            data['x{}'.format(i + 1)] = p.x
+            data['y{}'.format(i + 1)] = p.y
+            data['z{}'.format(i + 1)] = p.z
+        return data
+
+@dataclass
+class Vehicle:
+    length: int
+    width: int
+    height: int
 
 class RefactoredSolver:
-    xp = 0
-    zp = 0
-    yp = 0
-    heavyPackages = []
-    otherPackages = []
-    placedPackages = []
-    lastKnownMaxWidth = 0
-    lastKnownMaxLength = 0
-    lastKnownMaxHeight = 0
+    pos: Pos = Pos()
+    heavyPackages: list[Package] = []
+    otherPackages: list[Package] = []
+    placedPackages: list[dict] = []
+    lastKnownMax: Dimension = Dimension()
 
-    def __init__(self, game_info):
-        self.vehicle_length = game_info["vehicle"]["length"]
-        self.vehicle_width = game_info["vehicle"]["width"]
-        self.vehicle_height = game_info["vehicle"]["height"]
-        self.packages = game_info["dimensions"]
-        for package in self.packages:
-            if(package["height"] and package["weightClass"] == 2 > self.lastKnownMaxHeight):
-                self.lastKnownMaxHeight = package["height"]
-            if(package["weightClass"] == 2):
-                self.heavyPackages.append(
-                    {"area": package["width"]*package["length"], "id": package["id"]})
-            elif(package["weightClass"] != 2):
-                self.otherPackages.append(
-                    {"area": package["width"]*package["length"], "id": package["id"]})
+    def __init__(self, game_info: dict):
+        self.vehicle = Vehicle(**game_info['vehicle'])
+        self.packages = [Package(**package) for package in game_info["dimensions"]]
+        self.heavyPackages = list(filter(lambda p: p.is_heavy(), self.packages))
+        self.otherPackages = list(filter(lambda p: not p.is_heavy(), self.packages))
+
+        self.lastKnownMax.height = max([p.height for p in self.heavyPackages])
         self.heavyPackages = sorted(
-            self.heavyPackages, key=lambda i: (i['area']))
+            self.heavyPackages, key=lambda i: (i.area()))
         self.otherPackages = sorted(
-            self.otherPackages, key=lambda i: (i['area']))
+            self.otherPackages, key=lambda i: (i.area()))
 
-    def Solve(self):
-        for p in self.packages:
-            if(self.zp <= self.lastKnownMaxHeight):
-                id = self.heavyPackages.pop()["id"]
-                package = self.packages[id]
-            elif(len(self.otherPackages) != 0):
-                id = self.otherPackages.pop()["id"]
-                package = self.packages[id]
+    def Solve(self) -> list[dict]:
+        while len(self.heavyPackages) + len(self.otherPackages) > 0:
+            if self.pos.z <= self.lastKnownMax.height:
+                package = self.heavyPackages.pop()
+            elif len(self.otherPackages) > 0:
+                package = self.otherPackages.pop()
             else:
-                id = self.heavyPackages.pop()["id"]
-                package = self.packages[id]
+                package = self.heavyPackages.pop()
 
-            if(self.DoesPackageFitZ(package)):
-                self.AddPackage(package)
-                self.zp += package["height"]
+            if self.DoesPackageFitZ(package):
+                self.AddPackage(PlacedPackage(self.pos, package))
+                self.pos.z += package.height
 
-            elif(self.DoesPackageFitY(package)):
-                self.yp += self.lastKnownMaxWidth
-                self.zp = 0
-                self.AddPackage(package)
-                self.zp = package["height"]
-                self.lastKnownMaxWidth = 0
+            elif self.DoesPackageFitY(package):
+                self.pos.y += self.lastKnownMax.width
+                self.pos.z = 0
+                self.AddPackage(PlacedPackage(self.pos, package))
+                self.pos.z = package.height
+                self.lastKnownMax.width = 0
 
-            elif(self.DoesPackageFitX(package)):
-                self.xp += self.lastKnownMaxLength
-                self.yp = 0
-                self.zp = 0
-                self.AddPackage(package)
-                self.zp = package["height"]
-                self.lastKnownMaxLength = 0
+            elif self.DoesPackageFitX(package):
+                self.pos.x += self.lastKnownMax.length
+                self.pos.y = 0
+                self.pos.z = 0
+                self.AddPackage(PlacedPackage(self.pos, package))
+                self.pos.z = package.height
+                self.lastKnownMax.length = 0
 
             else:
                 print("Something went terribly wrong!")
@@ -67,27 +123,22 @@ class RefactoredSolver:
             self.SetMaxY(package)
         return self.placedPackages
 
-    def DoesPackageFitX(self, package):
-        return self.xp + self.lastKnownMaxLength + package["length"] < self.vehicle_length
+    def DoesPackageFitX(self, package: Package) -> bool:
+        return self.pos.x + self.lastKnownMax.length + package.length < self.vehicle.length
 
-    def DoesPackageFitY(self, package):
-        return self.yp + self.lastKnownMaxWidth + package["width"] < self.vehicle_width and self.xp + package["length"] < self.vehicle_length
+    def DoesPackageFitY(self, package: Package) -> bool:
+        return self.pos.y + self.lastKnownMax.width + package.width < self.vehicle.width and self.pos.x + package.length < self.vehicle.length
 
-    def DoesPackageFitZ(self, package):
-        return self.xp + package["length"] < self.vehicle_length and self.yp + package["width"] < self.vehicle_width and self.zp + package["height"] < self.vehicle_height
+    def DoesPackageFitZ(self, package: Package) -> bool:
+        return self.pos.x + package.length < self.vehicle.length and self.pos.y + package.width < self.vehicle.width and self.pos.z + package.height < self.vehicle.height
 
-    def SetMaxY(self, package):
-        if(package["width"] > self.lastKnownMaxWidth):
-            self.lastKnownMaxWidth = package["width"]
+    def SetMaxY(self, package: Package) -> None:
+        if package.width > self.lastKnownMax.width:
+            self.lastKnownMax.width = package.width
 
-    def SetMaxX(self, package):
-        if(package["length"] > self.lastKnownMaxLength):
-            self.lastKnownMaxLength = package["length"]
+    def SetMaxX(self, package: Package) -> None:
+        if package.length > self.lastKnownMax.length:
+            self.lastKnownMax.length = package.length
 
-    def AddPackage(self, package):
-        self.placedPackages.append({"id": package["id"], "x1": self.xp, "x2": self.xp, "x3": self.xp, "x4": self.xp,
-                                    "x5": self.xp + package["length"], "x6": self.xp + package["length"], "x7": self.xp + package["length"], "x8": self.xp + package["length"],
-                                    "y1": self.yp, "y2": self.yp, "y3": self.yp, "y4": self.yp,
-                                    "y5": self.yp + package["width"], "y6": self.yp + package["width"], "y7": self.yp + package["width"], "y8": self.yp + package["width"],
-                                    "z1": self.zp, "z2": self.zp, "z3": self.zp, "z4": self.zp,
-                                    "z5": self.zp + package["height"], "z6": self.zp + package["height"], "z7": self.zp + package["height"], "z8": self.zp + package["height"], "weightClass": package["weightClass"], "orderClass": package["orderClass"]})
+    def AddPackage(self, placed_package: PlacedPackage) -> None:
+        self.placedPackages.append(placed_package.as_solution())
