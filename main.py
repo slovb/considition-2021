@@ -1,6 +1,5 @@
-from greedy_solver import GreedySolver as Solver
+from refactored_solver import RefactoredSolver as Solver
 import api
-import json
 
 with open('secret/apikey.txt', 'r') as f:
     api_key = f.read().rstrip('\n')
