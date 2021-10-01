@@ -1,16 +1,31 @@
 from refactored_solver import RefactoredSolver as Solver
 import api
+from model import Vehicle, Package
 
 with open('secret/apikey.txt', 'r') as f:
     api_key = f.read().rstrip('\n')
 
 
-def main(map_name):
+def main(map_name: str) -> None:
 	response = api.new_game(api_key, map_name)
-	solver = Solver(game_info=response)
-	solution = solver.Solve()
+	vehicle = parse_vehicle(response)
+	packages = parse_packages(response)
+
+	solver = Solver(vehicle=vehicle, packages=packages)
+	placed_packages = solver.solve()
+	solution = [pp.as_solution() for pp in placed_packages]
+	
 	submit_game_response = api.submit_game(api_key, map_name, solution)
-	log_solution(response, submit_game_response)
+	if submit_game_response is not None:
+		log_solution(response, submit_game_response)
+
+
+def parse_vehicle(game_info: dict) -> Vehicle:
+	return Vehicle(**game_info['vehicle'])
+
+
+def parse_packages(game_info: dict) -> list[Package]:
+	return [Package(**package) for package in game_info["dimensions"]]
 
 
 def log_solution(response: dict, submit_game_response: dict) -> None:
