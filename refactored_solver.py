@@ -4,7 +4,7 @@ class RefactoredSolver:
     pos: Pos = Pos()
     heavyPackages: list[Package] = []
     otherPackages: list[Package] = []
-    placedPackages: list[Package] = []
+    placedPackages: list[PlacedPackage] = []
     lastKnownMax: Dimension = Dimension()
 
     def __init__(self, vehicle: Vehicle, packages: list[Package]):
@@ -19,7 +19,7 @@ class RefactoredSolver:
         self.otherPackages = sorted(
             self.otherPackages, key=lambda i: (i.area()))
 
-    def solve(self) -> list[Package]:
+    def solve(self) -> list[PlacedPackage]:
         while len(self.heavyPackages) + len(self.otherPackages) > 0:
             if self.pos.z <= self.lastKnownMax.height:
                 package = self.heavyPackages.pop()
