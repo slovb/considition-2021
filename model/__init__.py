@@ -3,5 +3,6 @@ from .package import Package
 from .placed_package import PlacedPackage
 from .pos import Pos
 from .vehicle import Vehicle
+from .volume import Volume
 
-__all__ = ['Dimension', 'Package', 'PlacedPackage', 'Pos', 'Vehicle']
+__all__ = ['Dimension', 'Package', 'PlacedPackage', 'Pos', 'Vehicle', 'Volume']
