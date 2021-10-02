@@ -1,6 +1,6 @@
 from refactored_solver import RefactoredSolver as Solver
 import api
-from model import Vehicle, Package
+from model import Package, Vector
 
 with open('secret/apikey.txt', 'r') as f:
     api_key = f.read().rstrip('\n')
@@ -20,12 +20,24 @@ def main(map_name: str) -> None:
 		log_solution(response, submit_game_response)
 
 
-def parse_vehicle(game_info: dict) -> Vehicle:
-	return Vehicle(**game_info['vehicle'])
+def parse_vehicle(game_info: dict) -> Vector:
+    return Vector(
+		x = game_info['vehicle']['length'],
+		y = game_info['vehicle']['width'],
+		z = game_info['vehicle']['height']
+	)
 
 
 def parse_packages(game_info: dict) -> list[Package]:
-	return [Package(**package) for package in game_info["dimensions"]]
+	packages = []
+	for p in game_info['dimensions']:
+		packages.append(Package(
+			id = p['id'],
+			dim = Vector(p['length'], p['width'], p['height']),
+			weightClass = p['weightClass'],
+			orderClass = p['orderClass']
+		))
+	return packages
 
 
 def log_solution(response: dict, submit_game_response: dict) -> None:

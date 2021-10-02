@@ -1,16 +1,16 @@
 from dataclasses import dataclass
 
+from .vector import Vector
+
 @dataclass
 class Package:
     id: int
-    length: int
-    width: int
-    height: int
+    dim: Vector
     weightClass: int
     orderClass: int
 
     def area(self) -> int:
-        return self.width * self.length
+        return self.dim.y * self.dim.x
     
     def is_heavy(self) -> bool:
         return self.weightClass == 2

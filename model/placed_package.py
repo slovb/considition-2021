@@ -1,24 +1,20 @@
-import copy
-from .pos import Pos
+from dataclasses import dataclass
+from .vector import Vector
 from .package import Package
 
+@dataclass
 class PlacedPackage:
+    pos: Vector
+    package: Package
 
-    def __init__(self, pos: Pos, package: Package):
-        self.pos = copy.copy(pos)
-        self.package = copy.copy(package)
-
-    def corners(self) -> list[Pos]:
+    def corners(self) -> list[Vector]:
         positions = []
-        for x in [0, self.package.length]:
-            for y in [0, self.package.width]:
-                for z in [0, self.package.height]:
-                    addition = Pos(x, y, z)
+        for x in [0, self.package.dim.x]:
+            for y in [0, self.package.dim.y]:
+                for z in [0, self.package.dim.z]:
+                    addition = Vector(x, y, z)
                     positions.append(self.pos + addition)
         return positions
-
-    def corner(self, i: int) -> Pos:
-        return self.corners()[i]
 
     def as_solution(self) -> dict:
         data = {
