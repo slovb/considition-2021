@@ -1,11 +1,13 @@
 from dataclasses import dataclass
+
 from .vector import Vector
 
 @dataclass
 class Area:
     pos: Vector
-    dimX: int
-    dimY: int
+    dim_x: int
+    dim_y: int
 
+    
     def area(self) -> int:
-        return self.dimX * self.dimY
+        return self.dim_x * self.dim_y

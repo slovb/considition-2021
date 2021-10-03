@@ -1,11 +1,14 @@
 from dataclasses import dataclass
+
 from .vector import Vector
 from .package import Package
+
 
 @dataclass
 class PlacedPackage:
     pos: Vector
     package: Package
+
 
     def corners(self) -> list[Vector]:
         positions = []
@@ -15,6 +18,7 @@ class PlacedPackage:
                     addition = Vector(x, y, z)
                     positions.append(self.pos + addition)
         return positions
+
 
     def as_solution(self) -> dict:
         data = {

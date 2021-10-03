@@ -8,9 +8,10 @@ class Package:
     dim: Vector
     weightClass: int
     orderClass: int
-
-    def area(self) -> int:
+    
+    def calc_area(self) -> int:
         return self.dim.y * self.dim.x
     
+    
     def is_heavy(self) -> bool:
-        return self.weightClass == 2
+        return self.weightClass == 2       

@@ -1,10 +1,12 @@
 from dataclasses import dataclass
 
+
 @dataclass
 class Vector:
     x: int = 0
     y: int = 0
     z: int = 0
+
 
     def __add__(self, other):
         return Vector(
@@ -12,6 +14,7 @@ class Vector:
             self.y + other.y,
             self.z + other.z
         )
+
     
     def __sub__(self, other):
         return Vector(
@@ -19,6 +22,7 @@ class Vector:
             self.y - other.y,
             self.z - other.z
         )
+
     
     def __getitem__(self, key):
         if key == 'x':
@@ -29,6 +33,7 @@ class Vector:
             return self.z
         else:
             raise KeyError(key)
+
     
     def __setitem__(self, key, value):
         if key == 'x':
@@ -39,6 +44,7 @@ class Vector:
             self.z = value
         else:
             raise KeyError(key)
+
     
     def abs(self):
         return Vector(

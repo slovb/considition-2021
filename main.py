@@ -1,6 +1,8 @@
-from refactored_solver import RefactoredSolver as Solver
 import api
+
 from model import Package, Vector
+
+from solver.dumb import Dumb as Solver
 
 with open('secret/apikey.txt', 'r') as f:
     api_key = f.read().rstrip('\n')
@@ -68,3 +70,4 @@ if __name__ == "__main__":
 		print('missing parameter')
 		exit()
 	main(argv[1])
+	# main('training1')

@@ -17,9 +17,9 @@ class RefactoredSolver:
 
         self.lastKnownMax.z = max([p.dim.z for p in self.heavyPackages])
         self.heavyPackages = sorted(
-            self.heavyPackages, key=lambda i: (i.area()))
+            self.heavyPackages, key=lambda i: (i.calc_area()))
         self.otherPackages = sorted(
-            self.otherPackages, key=lambda i: (i.area()))
+            self.otherPackages, key=lambda i: (i.calc_area()))
 
     def solve(self) -> list[PlacedPackage]:
         while len(self.heavyPackages) + len(self.otherPackages) > 0:
