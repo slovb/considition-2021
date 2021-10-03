@@ -67,7 +67,6 @@ def log(filename: str, text: str) -> None:
 if __name__ == "__main__":
 	from sys import argv
 	if len(argv) < 2:
-		print('missing parameter')
-		exit()
-	main(argv[1])
-	# main('training1')
+		main('training1')
+	else:
+		main(argv[1])
