@@ -3,13 +3,13 @@ import copy
 from model import *
 
 class RefactoredSolver:
-    pos: Vector = Vector()
+    pos: Vector3 = Vector3()
     heavyPackages: list[Package] = []
     otherPackages: list[Package] = []
     placedPackages: list[PlacedPackage] = []
-    lastKnownMax: Vector = Vector()
+    lastKnownMax: Vector3 = Vector3()
 
-    def __init__(self, vehicle: Vector, packages: list[Package]):
+    def __init__(self, vehicle: Vector3, packages: list[Package]):
         self.vehicle = vehicle
         self.packages = packages
         self.heavyPackages = list(filter(lambda p: p.is_heavy(), self.packages))

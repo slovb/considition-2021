@@ -1,6 +1,6 @@
 import api
 
-from model import Package, Vector
+from model import Package, Vector3
 
 from solver.dumb import Dumb as Solver
 
@@ -22,8 +22,8 @@ def main(map_name: str) -> None:
 		log_solution(response, submit_game_response)
 
 
-def parse_vehicle(game_info: dict) -> Vector:
-    return Vector(
+def parse_vehicle(game_info: dict) -> Vector3:
+    return Vector3(
 		x = game_info['vehicle']['length'],
 		y = game_info['vehicle']['width'],
 		z = game_info['vehicle']['height']
@@ -35,7 +35,7 @@ def parse_packages(game_info: dict) -> list[Package]:
 	for p in game_info['dimensions']:
 		packages.append(Package(
 			id = p['id'],
-			dim = Vector(p['length'], p['width'], p['height']),
+			dim = Vector3(p['length'], p['width'], p['height']),
 			weightClass = p['weightClass'],
 			orderClass = p['orderClass']
 		))

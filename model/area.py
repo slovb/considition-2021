@@ -1,13 +1,15 @@
 from dataclasses import dataclass
 
-from .vector import Vector
+from .vector import Vector3, Vector2
 
 @dataclass
 class Area:
-    pos: Vector
-    dim_x: int
-    dim_y: int
+    pos: Vector3
+    dim: Vector2
+
+    def key(self) -> tuple:
+        return (self.pos.key(), self.dim.key())
 
     
     def area(self) -> int:
-        return self.dim_x * self.dim_y
+        return self.dim.x * self.dim.y

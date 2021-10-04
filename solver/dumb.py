@@ -1,6 +1,6 @@
 from copy import copy
 
-from model import PlacedPackage, Package, Vector, Area, Volume
+from model import PlacedPackage, Package, Vector3, Area, Volume
 
 from .solver import Solver
 
@@ -27,8 +27,8 @@ class Dumb(Solver):
                 if pos is not None:
                     break
                 if j == 2:
-                    package.dim.flip()
-                package.dim.permutate()
+                    package.dim = package.dim.flip()
+                package.dim = package.dim.permutate()
                 pos = self.where(package)
             if pos is None:
                 exit('did not finish')
@@ -40,7 +40,7 @@ class Dumb(Solver):
             self.set_min(i)
         return self.placed_packages
     
-    def where(self, package: Package) -> Vector:
+    def where(self, package: Package) -> Vector3:
         for vol in self.volumes:
             if vol.dim_inside(package.dim):
                 pos = vol.support.pos

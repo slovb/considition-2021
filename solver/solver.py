@@ -1,18 +1,18 @@
 from abc import ABC, abstractmethod
 from copy import copy
 
-from model import Package, PlacedPackage, Vector, Volume, Area
+from model import Package, PlacedPackage, Vector2, Vector3, Volume, Area
 
 class Solver(ABC):
     
-    def __init__(self, vehicle: Vector, packages: list[Package]):
+    def __init__(self, vehicle: Vector3, packages: list[Package]):
         self.vehicle = vehicle
         self.packages = packages
         self.volumes = []
         self.volumes.append(Volume(
-            pos = Vector(0, 0, 0),
+            pos = Vector3(0, 0, 0),
             dim = copy(self.vehicle),
-            support = Area(Vector(0, 0, 0), self.vehicle.x, self.vehicle.y)
+            support = Area(Vector3(0, 0, 0), Vector2(self.vehicle.x, self.vehicle.y))
         ))
         self.initialize()
 
@@ -26,7 +26,7 @@ class Solver(ABC):
         pass
     
 
-    def place(self, package: Package, pos: Vector):
+    def place(self, package: Package, pos: Vector3):
         self.placed_packages.append(PlacedPackage(
             pos = pos,
             package = package
@@ -35,13 +35,18 @@ class Solver(ABC):
             pos = pos,
             dim = copy(package.dim),
             support = Area(
-                pos = pos + Vector(0, 0, package.dim.z),
-                dim_x = package.dim.x,
-                dim_y = package.dim.y
+                pos = pos + Vector3(0, 0, package.dim.z),
+                dim = Vector2(package.dim.x, package.dim.y)
             )
         )
+        seen = set()
         volumes = []
         for v in self.volumes:
-            volumes =  volumes + v.remove(pvol)
+            newVolumes = v.remove(pvol)
+            for vol in newVolumes:
+                key = vol.key()
+                if key not in seen:
+                    seen.add(key)
+                    volumes.append(vol)
         self.volumes = volumes
     

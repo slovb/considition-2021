@@ -1,11 +1,11 @@
 from dataclasses import dataclass
 
-from .vector import Vector
+from .vector import Vector3
 
 @dataclass
 class Package:
     id: int
-    dim: Vector
+    dim: Vector3
     weightClass: int
     orderClass: int
     

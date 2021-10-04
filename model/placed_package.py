@@ -1,21 +1,21 @@
 from dataclasses import dataclass
 
-from .vector import Vector
+from .vector import Vector3
 from .package import Package
 
 
 @dataclass
 class PlacedPackage:
-    pos: Vector
+    pos: Vector3
     package: Package
 
 
-    def corners(self) -> list[Vector]:
+    def corners(self) -> list[Vector3]:
         positions = []
         for x in [0, self.package.dim.x]:
             for y in [0, self.package.dim.y]:
                 for z in [0, self.package.dim.z]:
-                    addition = Vector(x, y, z)
+                    addition = Vector3(x, y, z)
                     positions.append(self.pos + addition)
         return positions
 

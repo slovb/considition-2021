@@ -1,30 +1,68 @@
+from __future__ import annotations
 from dataclasses import dataclass
+
+@dataclass
+class Vector2:
+    x: int = 0
+    y: int = 0
+    
+    
+    def key(self) -> tuple:
+        return (self.x, self.y)
+
+
+    def __getitem__(self, key) -> int:
+        if key == 'x' or key == 0:
+            return self.x
+        elif key == 'y' or key == 1:
+            return self.y
+        raise KeyError(key)
+
+
+    def __setitem__(self, key, value) -> None:
+        if key in ['x', 'y', 0, 1]:
+            raise AttributeError(key)
+        # if key == 'x' or key == 0:
+        #     self.x = value
+        # elif key == 'y' or key == 1:
+        #     self.y = value
+        raise KeyError(key)
+ 
+        
+    def __delitem__(self, key) -> None:
+        if key in ['x', 'y', 0, 1]:
+            raise AttributeError(key)
+        raise KeyError(key)
 
 
 @dataclass
-class Vector:
+class Vector3:
     x: int = 0
     y: int = 0
     z: int = 0
 
 
-    def __add__(self, other):
-        return Vector(
+    def key(self) -> tuple:
+        return (self.x, self.y, self.z)
+
+
+    def __add__(self, other) -> Vector3:
+        return Vector3(
             self.x + other.x,
             self.y + other.y,
             self.z + other.z
         )
 
     
-    def __sub__(self, other):
-        return Vector(
+    def __sub__(self, other) -> Vector3:
+        return Vector3(
             self.x - other.x,
             self.y - other.y,
             self.z - other.z
         )
 
     
-    def __getitem__(self, key):
+    def __getitem__(self, key) -> int:
         if key == 'x' or key == 0:
             return self.x
         elif key == 'y' or key == 1:
@@ -35,27 +73,34 @@ class Vector:
             raise KeyError(key)
 
     
-    def __setitem__(self, key, value):
-        if key == 'x' or key == 0:
-            self.x = value
-        elif key == 'y' or key == 1:
-            self.y = value
-        elif key == 'z' or key == 2:
-            self.z = value
-        else:
-            raise KeyError(key)
-
-
-    def permutate(self):
-        self.x, self.y, self.z = self.y, self.z, self.x
+    def __setitem__(self, key, value) -> None:
+        if key in ['x', 'y', 'z', 0, 1, 2]:
+            raise AttributeError(key)
+        # if key == 'x' or key == 0:
+        #     self.x = value
+        # elif key == 'y' or key == 1:
+        #     self.y = value
+        # elif key == 'z' or key == 2:
+        #     self.z = value
+        raise KeyError(key)
         
         
-    def flip(self):
-        self.x, self.y, self.z = self.y, self.x, self.z
+    def __delitem__(self, key) -> None:
+        if key in ['x', 'y', 'z', 0, 1, 2]:
+            raise AttributeError(key)
+        raise KeyError(key)
+
+
+    def permutate(self) -> Vector3:
+        return Vector3(self.y, self.z, self.x)
+        
+        
+    def flip(self) -> Vector3:
+        return Vector3(self.y, self.x, self.z)
     
 
-    def abs(self):
-        return Vector(
+    def abs(self) -> Vector3:
+        return Vector3(
             abs(self.x),
             abs(self.y),
             abs(self.z)
