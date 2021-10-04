@@ -44,7 +44,7 @@ class Dumb(Solver):
         for vol in self.volumes:
             if vol.dim_inside(package.dim):
                 pos = vol.support.pos
-                if vol.vol_inside(Volume(pos, package.dim)):
+                if vol.vol_inside(Volume(pos, package.dim, None)):
                     return copy(pos)
         return None
         

@@ -13,3 +13,11 @@ class Area:
     
     def area(self) -> int:
         return self.dim.x * self.dim.y
+    
+    
+    def __setitem__(self, key, value) -> None:
+        raise AttributeError(key)
+    
+    
+    def __delitem__(self, key) -> None:
+        raise AttributeError(key)

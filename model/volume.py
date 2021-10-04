@@ -1,6 +1,5 @@
 from __future__ import annotations
 from dataclasses import dataclass
-from copy import copy, deepcopy
 
 from .vector import Vector2, Vector3
 from .area import Area
@@ -36,7 +35,7 @@ def oneOfLeftTwoOfRight(l: Vector3, r: Vector3):
 class Volume:
     pos: Vector3
     dim: Vector3
-    support: Area = None
+    support: Area
 
     def key(self) -> tuple:
         return (
@@ -99,25 +98,32 @@ class Volume:
         l_dim = clamp3(rel_pos_left, (0, 0, 0), self.dim) # bound shrink 0 <= new d <= old d
         l_dims = oneOfLeftTwoOfRight(l_dim, self.dim)
         for d in l_dims:
-            v = self.__duplicate()
-            v.dim = d
-            volumes.append(v)
+            volumes.append(Volume(
+                self.pos,
+                d,
+                Volume.crop_support(self.pos, d, self.support)
+            ))
         
         # right moves past volume and shrinks until the right bound is hit
         r_pos = clamp3(self.pos + rel_pos_right, left_bound, right_bound)
         r_dim = clamp3(self.dim - (r_pos - self.pos), (0, 0, 0), self.dim)
         r_poses = oneOfLeftTwoOfRight(r_pos, self.pos)
         r_dims = oneOfLeftTwoOfRight(r_dim, self.dim)
-        for i in range(3):
-            v = self.__duplicate()
-            v.pos = r_poses[i]
-            v.dim = r_dims[i]
-            if i == 2: # z, new support area ontop of removed volume
-                v.support = deepcopy(vol.support)
-            volumes.append(v)
-
-        for v in volumes:
-            v.__fix_support()
+        volumes.append(Volume(
+            r_poses[0],
+            r_dims[0],
+            Volume.crop_support(r_poses[0], r_dims[0], self.support)
+        ))
+        volumes.append(Volume(
+            r_poses[1],
+            r_dims[1],
+            Volume.crop_support(r_poses[1], r_dims[1], self.support)
+        ))
+        volumes.append(Volume(
+            r_poses[2],
+            r_dims[2],
+            Volume.crop_support(r_poses[2], r_dims[2], vol.support)
+        ))
 
         volumes = list(filter(lambda v: v.__is_valid(), volumes))
         return volumes
@@ -131,28 +137,28 @@ class Volume:
                self.support.area() > 0
 
     
-    def __fix_support(self) -> None:
-        a = self.support
+    @staticmethod
+    def crop_support(pos, dim, a) -> None:
         # if the area is wholy outside, set to None and stop
-        if not (self.pos.x - a.dim.x <= a.pos.x <= self.pos.x + self.dim.x) or \
-           not (self.pos.y - a.dim.y <= a.pos.y <= self.pos.y + self.dim.y) or \
-           not (self.pos.z           <= a.pos.z <= self.pos.z + self.dim.z):
-            self.support = None
-            return
+        if not (pos.x - a.dim.x <= a.pos.x <= pos.x + dim.x) or \
+           not (pos.y - a.dim.y <= a.pos.y <= pos.y + dim.y) or \
+           not (pos.z           <= a.pos.z <= pos.z + dim.z):
+            return None
         
-        adx = clamp(a.dim.x - (self.pos.x - a.pos.x), 0, a.dim.x) # left overshoot
-        adx = min(adx, self.dim.x + self.pos.x - a.pos.x)         # right overshoot
+        adx = clamp(a.dim.x - (pos.x - a.pos.x), 0, a.dim.x) # left overshoot
+        adx = min(adx, dim.x + pos.x - a.pos.x)              # right overshoot
         
-        ady = clamp(a.dim.y - (self.pos.y - a.pos.y), 0, a.dim.y) # left overshoot
-        ady = min(ady, self.dim.y + self.pos.y - a.pos.y)         # right overshoot
+        ady = clamp(a.dim.y - (pos.y - a.pos.y), 0, a.dim.y) # left overshoot
+        ady = min(ady, dim.y + pos.y - a.pos.y)              # right overshoot
         
-        a.dim = Vector2(adx, ady)
-
-        a.pos = clamp3(a.pos, self.pos, self.pos + self.dim)
-    
-    def __duplicate(self) -> Volume:
-        return Volume(
-            pos = copy(self.pos),
-            dim = copy(self.dim),
-            support = deepcopy(self.support)
+        return Area(
+            pos = clamp3(a.pos, pos, pos + dim),
+            dim = Vector2(adx, ady)
         )
+
+    
+    def __setitem__(self, key, _) -> None:
+        raise AttributeError(key)
+    
+    def __delitem__(self, key) -> None:
+        raise AttributeError(key)

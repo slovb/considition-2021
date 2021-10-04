@@ -22,10 +22,6 @@ class Vector2:
     def __setitem__(self, key, value) -> None:
         if key in ['x', 'y', 0, 1]:
             raise AttributeError(key)
-        # if key == 'x' or key == 0:
-        #     self.x = value
-        # elif key == 'y' or key == 1:
-        #     self.y = value
         raise KeyError(key)
  
         
@@ -76,12 +72,6 @@ class Vector3:
     def __setitem__(self, key, value) -> None:
         if key in ['x', 'y', 'z', 0, 1, 2]:
             raise AttributeError(key)
-        # if key == 'x' or key == 0:
-        #     self.x = value
-        # elif key == 'y' or key == 1:
-        #     self.y = value
-        # elif key == 'z' or key == 2:
-        #     self.z = value
         raise KeyError(key)
         
         
