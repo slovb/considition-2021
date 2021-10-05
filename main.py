@@ -2,7 +2,7 @@ import api
 
 from model import Package, Vector3
 
-from solver.dumb import Dumb as Solver
+from solver.side_align import SideAlign as Solver
 
 with open('secret/apikey.txt', 'r') as f:
     api_key = f.read().rstrip('\n')

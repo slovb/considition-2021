@@ -1,3 +1,4 @@
+from __future__ import annotations
 from dataclasses import dataclass
 
 from .vector import Vector3
@@ -14,4 +15,13 @@ class Package:
     
     
     def is_heavy(self) -> bool:
-        return self.weightClass == 2       
+        return self.weightClass == 2
+
+
+    def rotate(self, dim: Vector3) -> Package:
+        return Package(
+            id = self.id,
+            dim = dim,
+            weightClass = self.weightClass,
+            orderClass = self.orderClass
+        )
