@@ -37,9 +37,13 @@ class Vector3:
     y: int = 0
     z: int = 0
 
+    __key: tuple = None
+
 
     def key(self) -> tuple:
-        return (self.x, self.y, self.z)
+        if self.__key is None:
+            self.__key = (self.x, self.y, self.z)
+        return self.__key
 
 
     def __add__(self, other) -> Vector3:
@@ -95,3 +99,8 @@ class Vector3:
             abs(self.y),
             abs(self.z)
         )
+        
+    
+    def length(self) -> int:
+        v = self.abs()
+        return v.x + v.y + v.z

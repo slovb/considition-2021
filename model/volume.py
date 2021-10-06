@@ -37,12 +37,17 @@ class Volume:
     dim: Vector3
     support: Area
 
+    __key: tuple = None
+
+
     def key(self) -> tuple:
-        return (
-            self.pos.key(),
-            self.dim.key(),
-            self.support.key()
-        )
+        if self.__key is None:
+            self.__key = (
+                self.pos.key(),
+                self.dim.key(),
+                self.support.key()
+            )
+        return self.__key
         
 
     def pos_inside(self, pos: Vector3) -> bool:
@@ -80,6 +85,26 @@ class Volume:
                 for z in [0, self.dim.z]:
                     positions.append(self.pos + Vector3(x, y, z))
         return positions
+    
+    
+    def get_midpoint(self) -> Vector3:
+        return Vector3(
+            self.pos.x + self.dim.x / 2,
+            self.pos.y + self.dim.y / 2,
+            self.pos.z + self.dim.z / 2
+        )
+    
+    
+    def get_far_corner(self) -> Vector3:
+        return self.pos + self.dim
+    
+    
+    def resize(self, dim: Vector3) -> Volume:
+        return Volume(
+            self.pos,
+            dim,
+            Volume.crop_support(self.pos, dim, self.support)
+        )
 
  
     def remove(self, vol: Volume) -> list[Volume]:
@@ -138,7 +163,10 @@ class Volume:
 
     
     @staticmethod
-    def crop_support(pos, dim, a) -> None:
+    def crop_support(pos: Vector3, dim: Vector3, a: Area) -> Area:
+        if a is None:
+            return None
+        
         # if the area is wholy outside, set to None and stop
         if not (pos.x - a.dim.x <= a.pos.x <= pos.x + dim.x) or \
            not (pos.y - a.dim.y <= a.pos.y <= pos.y + dim.y) or \

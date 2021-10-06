@@ -6,9 +6,14 @@ from .vector import Vector3, Vector2
 class Area:
     pos: Vector3
     dim: Vector2
+    
+    __key: tuple = None    
+    
 
     def key(self) -> tuple:
-        return (self.pos.key(), self.dim.key())
+        if self.__key is None:
+            self.__key = (self.pos.key(), self.dim.key())
+        return self.__key
 
     
     def area(self) -> int:
