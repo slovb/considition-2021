@@ -48,8 +48,20 @@ def log_solution(response: dict, submit_game_response: dict) -> None:
 	valid = submit_game_response['valid']
 	link = submit_game_response['link'].split(' ')[-1]
 
-	text = '{}, {}, {}, {}'.format(map_name, score, valid, link)
-	print(text)
+	scoreData = valid
+	if valid:
+		gameStats = api.fetch_game(api_key, submit_game_response['gameId'])['gameStats']
+		scoreData = '{:.2f}, {} / {} x, {} / {} order, {} weight ({} crushed)'.format(
+			gameStats['packingEfficiency'],
+			gameStats['packedLength'],
+			gameStats['maxLengthScore'],
+			gameStats['orderScore'],
+			gameStats['maxOrderScore'],
+			gameStats['weightScore'],
+			gameStats['crushedPackages']
+		)
+	text = '{}, {}, {}, {}'.format(map_name, score, scoreData, link)
+	print(text)		
 
 	if not valid:
 		return

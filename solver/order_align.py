@@ -7,10 +7,14 @@ num_candidates = 50
 
 class OrderAlign(Solver):
     placed_packages: list[PlacedPackage] = []
-
+    
 
     def initialize(self):
         self.set_min()
+        ocLeft = [0]*5
+        for p in self.packages:
+            ocLeft[p.orderClass] += 1
+        self.ocLeft = ocLeft
 
     
     def solve(self) -> list[PlacedPackage]:
@@ -43,6 +47,7 @@ class OrderAlign(Solver):
             package, pos = candidates[0]
             self.place(package, pos)
             placed.add(package.id)
+            self.ocLeft[package.orderClass] -= 1
             
             print('{}\t{}\t{}\t@ {}'.format(len(placed), len(self.volumes), package, pos))
             self.volumes = [v for v in self.volumes if not self.small(v)] # filter out too small volumes
@@ -51,18 +56,27 @@ class OrderAlign(Solver):
 
     def score(self, package: Package, pos: Vector3):
         d = self.distances_from_optimal(package, pos)
-        w = 0 if not package.is_heavy() else 5 * pos.z - 100
+        w = 0 if not package.is_heavy() else 5 * pos.z - 1000
         x = pos.x + package.dim.x / 2
+        o = self.order_skip_score(package)
         b = -package.calc_volume()
         if not self.bounding_volume.vol_inside(package.as_volume(pos)):
             b += 10**7
-        return sum(d) + w + x + b
+        return sum(d) + w + x*x + b - o**2
+    
+    
+    def order_skip_score(self, package: Package) -> list:
+        skips = self.ocLeft[:package.orderClass]
+        score = 0
+        for i, n in enumerate(skips):
+            score += 10**(len(skips)-i) * n**2
+        return score
 
 
     def distances_from_optimal(self, package: Package, pos: Vector3) -> tuple:
         mid_x = pos.x + package.dim.x / 2
-        mid_y = pos.x + package.dim.y / 2
-        mid_z = pos.x + package.dim.z / 2
+        mid_y = pos.y + package.dim.y / 2
+        mid_z = pos.z + package.dim.z / 2
         optimal_x = (4 - package.orderClass) * self.vehicle.x / 4
         return [abs(mid_x - optimal_x),
                 min(mid_y, self.vehicle.y - mid_y),
