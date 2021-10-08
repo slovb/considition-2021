@@ -2,7 +2,7 @@ import api
 
 from model import Package, Vector3
 
-from solver.order_align import OrderAlign as Solver
+from solver.weight_align import WeightAlign as Solver
 
 with open('secret/apikey.txt', 'r') as f:
     api_key = f.read().rstrip('\n')
