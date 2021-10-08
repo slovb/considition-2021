@@ -3,7 +3,7 @@ from copy import copy
 
 from model import PlacedPackage, Package, Vector3, Area, Volume
 
-from .solver import Solver
+from solver.solver import Solver
 
 ''' Not sure what is wrong here, but I don't want to pursue this path right now '''
 

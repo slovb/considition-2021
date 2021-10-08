@@ -2,7 +2,7 @@ from copy import copy
 
 from model import PlacedPackage, Package, Vector3, Area, Volume
 
-from .solver import Solver
+from solver.solver import Solver
 
 class Dumb(Solver):
     placed_packages: list[PlacedPackage] = []

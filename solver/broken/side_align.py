@@ -1,6 +1,6 @@
 from model import PlacedPackage, Package, Vector3, Volume
 
-from .solver import Solver
+from solver.solver import Solver
 
 
 num_candidates = 20
