@@ -3,7 +3,7 @@ from model import PlacedPackage, Package, Vector3, Volume
 from .solver import Solver
 
 
-num_candidates = 50
+preferred_num_candidates = 50
 
 class WeightAlign(Solver):
     placed_packages: list[PlacedPackage] = []
@@ -29,22 +29,22 @@ class WeightAlign(Solver):
         while len(placed) < len(self.packages):
             packages = [package for package in self.packages if package.id not in placed]
 
-            candidates = []
+            candidates: list[tuple[Package, Vector3, Volume]] = []
             for package in packages:
                 if package.is_heavy():
                     self.volumes = sorted(self.volumes, key=lambda vol: (vol.pos.z, vol.pos.x))
                 else:
                     self.volumes = sorted(self.volumes, key=lambda vol: vol.pos.x)
                 for j in range(6):
-                    for p in self.where(package):
-                        candidates.append((package, p))
+                    for where in self.where(package):
+                        candidates.append((package,) + where)
                     if j == 3:
                         package = package.rotate(package.dim.flip())
                     package = package.rotate(package.dim.permutate())
                 if len(candidates) == 0:
                     exit('did not finish')
-            candidates = sorted(candidates, key=lambda c: self.score(c[0], c[1]))
-            package, pos = candidates[0]
+            candidates = sorted(candidates, key=lambda c: self.score(c[0], c[1], c[2]))
+            package, pos, _ = candidates[0]
             self.place(package, pos)
             placed.add(package.id)
             self.ocLeft[package.orderClass] -= 1
@@ -54,15 +54,23 @@ class WeightAlign(Solver):
         return self.placed_packages
 
 
-    def score(self, package: Package, pos: Vector3):
-        d = self.distances_from_optimal(package, pos)
-        w = 0 if not package.is_heavy() else 5 * pos.z - 1000
+    def score(self, package: Package, pos: Vector3, vol: Volume):
+        #d = self.distances_from_optimal(package, pos)
+        w = self.weight_score(package, pos, vol)
+        s = self.side_align_score(package, pos)
         x = pos.x + package.dim.x / 2
         o = self.order_skip_score(package)
         b = -package.calc_volume()
         if not self.bounding_volume.vol_inside(package.as_volume(pos)):
             b += 10**7
-        return sum(d) + w + x*x + b - o**2
+        return w + s + x*x + b - o**2
+    
+    
+    def side_align_score(self, package: Package, pos: Vector3) -> int:
+        return min(
+            pos.y,
+            self.vehicle.y - pos.y - package.dim.y
+        )
     
     
     def order_skip_score(self, package: Package) -> list:
@@ -70,6 +78,20 @@ class WeightAlign(Solver):
         score = 0
         for i, n in enumerate(skips):
             score += 10**(len(skips)-i) * n**2
+        return score
+
+
+    def weight_score(self, package, pos: Vector3, vol: Volume):
+        if not package.is_heavy():
+            return 1000
+        score = 0
+        for wc in vol.support.weights:
+            if wc == 0:
+                score += 50
+            elif wc == 1:
+                score += 12
+            else:
+                score += 5
         return score
 
 
@@ -83,8 +105,8 @@ class WeightAlign(Solver):
                 abs(mid_z)]
 
     
-    def where(self, package: Package) -> list[Vector3]:
-        positions = []
+    def where(self, package: Package) -> list[tuple[Vector3, Volume]]:
+        positions: list[tuple[Vector3, Volume]] = []
         for vol in self.volumes:
             if vol.dim_inside(package.dim):
                 pos = vol.support.area.pos
@@ -95,15 +117,15 @@ class WeightAlign(Solver):
                     max(vol.pos.y, pos.y - package.dim.y + 1),
                     pos.z
                 ))
-                candidates.append(Vector3(
-                    min(vol.pos.x + vol.dim.x - package.dim.x, pos.x + dim.x - 1),
+                candidates.append(Vector3( # scoot right
+                    max(vol.pos.x, pos.x - package.dim.x + 1),
                     min(vol.pos.y + vol.dim.y - package.dim.y, pos.y + dim.y - 1),
                     pos.z
                 ))
                 for p in candidates:
                     if vol.vol_inside(Volume(p, package.dim, None)):
-                        positions.append(p)
-            if len(positions) > num_candidates:
+                        positions.append((p, vol))
+            if len(positions) > preferred_num_candidates:
                 break
         return positions
 
