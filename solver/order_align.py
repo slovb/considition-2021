@@ -87,8 +87,8 @@ class OrderAlign(Solver):
         positions = []
         for vol in self.volumes:
             if vol.dim_inside(package.dim):
-                pos = vol.support.pos
-                dim = vol.support.dim
+                pos = vol.support.area.pos
+                dim = vol.support.area.dim
                 candidates = [pos]
                 candidates.append(Vector3( # scoot left
                     max(vol.pos.x, pos.x - package.dim.x + 1),

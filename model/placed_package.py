@@ -4,7 +4,7 @@ from .vector import Vector3
 from .package import Package
 
 
-@dataclass
+@dataclass(order=True, frozen=True)
 class PlacedPackage:
     pos: Vector3
     package: Package

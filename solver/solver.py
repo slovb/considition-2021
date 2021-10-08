@@ -1,14 +1,6 @@
 from abc import ABC, abstractmethod
 
-from model import Package, PlacedPackage, Vector2, Vector3, Volume, Area
-
-
-def max3(u: Vector3, v: Vector3) -> Vector3:
-    return Vector3(
-        max(u.x, v.x),
-        max(u.y, v.y),
-        max(u.z, v.z)
-    )
+from model import Package, HEAVY, PlacedPackage, Vector2, Vector3, Area, Support, Volume
 
 
 class Solver(ABC):
@@ -20,7 +12,13 @@ class Solver(ABC):
         self.volumes.append(Volume(
             pos = Vector3(0, 0, 0),
             dim = self.vehicle,
-            support = Area(Vector3(0, 0, 0), Vector2(self.vehicle.x, self.vehicle.y))
+            support = Support(
+                area = Area(
+                    pos = Vector3(0, 0, 0),
+                    dim = Vector2(self.vehicle.x, self.vehicle.y)
+                ),
+                weights = tuple()
+            )
         ))
         self.bounding_volume = Volume(
             pos = Vector3(0, 0, 0),
@@ -44,26 +42,19 @@ class Solver(ABC):
             pos = pos,
             package = package
         ))
-        # pvol = Volume(
-        #     pos = pos,
-        #     dim = package.dim,
-        #     support = Area(
-        #         pos = pos + Vector3(0, 0, package.dim.z),
-        #         dim = Vector2(package.dim.x, package.dim.y)
-        #     )
-        # )
+
         package_volume = package.as_volume(pos)
         seen = set()
-        volumes = []
+        volumes: list[Volume] = []
         for v in self.volumes:
             newVolumes = v.remove(package_volume)
             for vol in newVolumes:
-                key = vol.key()
-                if key not in seen:
-                    seen.add(key)
+                if vol not in seen:
+                    seen.add(vol)
                     volumes.append(vol)
         self.volumes = volumes
         
         if not self.bounding_volume.vol_inside(package_volume):
-            self.bounding_volume = self.bounding_volume.resize(max3(self.bounding_volume.dim, package_volume.get_far_corner()))
+            self.bounding_volume = self.bounding_volume.resize(
+                self.bounding_volume.dim.suprenum(package_volume.get_far_corner()))
             print('resize ' + str(self.bounding_volume))

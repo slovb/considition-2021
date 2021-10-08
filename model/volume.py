@@ -1,27 +1,8 @@
 from __future__ import annotations
 from dataclasses import dataclass
 
-from .vector import Vector2, Vector3
-from .area import Area
-
-
-clamp = lambda n, lower, upper: max(min(upper, n), lower)
-
-
-def clamp2(v, lower, upper):
-    return Vector2(
-        clamp(v[0], lower[0], upper[0]),
-        clamp(v[1], lower[1], upper[1])
-    )
-
-
-def clamp3(v, lower, upper):
-    return Vector3(
-        clamp(v[0], lower[0], upper[0]),
-        clamp(v[1], lower[1], upper[1]),
-        clamp(v[2], lower[2], upper[2])
-    )
-
+from .vector import clamp, Vector2, Vector3
+from .support import Support
 
 def oneOfLeftTwoOfRight(l: Vector3, r: Vector3):
     return [
@@ -31,24 +12,12 @@ def oneOfLeftTwoOfRight(l: Vector3, r: Vector3):
     ]
 
 
-@dataclass
+@dataclass(order=True, frozen=True)
 class Volume:
     pos: Vector3
     dim: Vector3
-    support: Area
+    support: Support
 
-    __key: tuple = None
-
-
-    def key(self) -> tuple:
-        if self.__key is None:
-            self.__key = (
-                self.pos.key(),
-                self.dim.key(),
-                self.support.key()
-            )
-        return self.__key
-        
 
     def pos_inside(self, pos: Vector3) -> bool:
         return (self.pos.x <= pos.x <= self.pos.x + self.dim.x) and \
@@ -103,7 +72,7 @@ class Volume:
         return Volume(
             self.pos,
             dim,
-            Volume.crop_support(self.pos, dim, self.support)
+            None if self.support is None else self.support.crop(self.pos, dim)
         )
 
  
@@ -112,7 +81,7 @@ class Volume:
            volumes that can be created in the remaining space'''
         if not self.vol_intersect(vol):
             return [self]
-        volumes = []
+        volumes: list[Volume] = []
         
         rel_pos_left = vol.pos - self.pos
         rel_pos_right = rel_pos_left + vol.dim
@@ -120,37 +89,37 @@ class Volume:
         right_bound = self.pos + self.dim
         
         # left does not move, but shrinks until it hits the vol
-        l_dim = clamp3(rel_pos_left, (0, 0, 0), self.dim) # bound shrink 0 <= new d <= old d
+        l_dim = rel_pos_left.clamp(Vector3(0, 0, 0), self.dim) # bound shrink 0 <= new d <= old d
         l_dims = oneOfLeftTwoOfRight(l_dim, self.dim)
         for d in l_dims:
             volumes.append(Volume(
                 self.pos,
                 d,
-                Volume.crop_support(self.pos, d, self.support)
+                self.support.crop(self.pos, d)
             ))
         
         # right moves past volume and shrinks until the right bound is hit
-        r_pos = clamp3(self.pos + rel_pos_right, left_bound, right_bound)
-        r_dim = clamp3(self.dim - (r_pos - self.pos), (0, 0, 0), self.dim)
+        r_pos = (self.pos + rel_pos_right).clamp(left_bound, right_bound)
+        r_dim = (self.dim - (r_pos - self.pos)).clamp(Vector3(0, 0, 0), self.dim)
         r_poses = oneOfLeftTwoOfRight(r_pos, self.pos)
         r_dims = oneOfLeftTwoOfRight(r_dim, self.dim)
         volumes.append(Volume(
             r_poses[0],
             r_dims[0],
-            Volume.crop_support(r_poses[0], r_dims[0], self.support)
+            self.support.crop(r_poses[0], r_dims[0])
         ))
         volumes.append(Volume(
             r_poses[1],
             r_dims[1],
-            Volume.crop_support(r_poses[1], r_dims[1], self.support)
+            self.support.crop(r_poses[1], r_dims[1])
         ))
         volumes.append(Volume(
             r_poses[2],
             r_dims[2],
-            Volume.crop_support(r_poses[2], r_dims[2], vol.support)
+            vol.support.add_weights(self.support.weights).crop(r_poses[2], r_dims[2])
         ))
 
-        volumes = list(filter(lambda v: v.__is_valid(), volumes))
+        volumes = [vol for vol in volumes if vol.__is_valid()]
         return volumes
 
     
@@ -159,34 +128,4 @@ class Volume:
                self.dim.y > 0 and \
                self.dim.z > 0 and \
                self.support is not None and \
-               self.support.area() > 0
-
-    
-    @staticmethod
-    def crop_support(pos: Vector3, dim: Vector3, a: Area) -> Area:
-        if a is None:
-            return None
-        
-        # if the area is wholy outside, set to None and stop
-        if not (pos.x - a.dim.x <= a.pos.x <= pos.x + dim.x) or \
-           not (pos.y - a.dim.y <= a.pos.y <= pos.y + dim.y) or \
-           not (pos.z           <= a.pos.z <= pos.z + dim.z):
-            return None
-        
-        adx = clamp(a.dim.x - (pos.x - a.pos.x), 0, a.dim.x) # left overshoot
-        adx = min(adx, dim.x + pos.x - a.pos.x)              # right overshoot
-        
-        ady = clamp(a.dim.y - (pos.y - a.pos.y), 0, a.dim.y) # left overshoot
-        ady = min(ady, dim.y + pos.y - a.pos.y)              # right overshoot
-        
-        return Area(
-            pos = clamp3(a.pos, pos, pos + dim),
-            dim = Vector2(adx, ady)
-        )
-
-    
-    def __setitem__(self, key, _) -> None:
-        raise AttributeError(key)
-    
-    def __delitem__(self, key) -> None:
-        raise AttributeError(key)
+               self.support.calc_area() > 0

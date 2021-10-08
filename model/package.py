@@ -2,10 +2,13 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 from .area import Area
+from .support import Support
 from .volume import Volume
 from .vector import Vector2, Vector3
 
-@dataclass
+import model
+
+@dataclass(order=True, frozen=True)
 class Package:
     id: int
     dim: Vector3
@@ -24,15 +27,18 @@ class Package:
         return Volume(
             pos = pos,
             dim = self.dim,
-            support = Area(
-                pos = pos + Vector3(0, 0, self.dim.z),
-                dim = Vector2(self.dim.x, self.dim.y)
+            support = Support(
+                area = Area(
+                    pos = pos + Vector3(0, 0, self.dim.z),
+                    dim = Vector2(self.dim.x, self.dim.y)
+                ),
+                weights = (self.weightClass,)
             )
         )
     
     
     def is_heavy(self) -> bool:
-        return self.weightClass == 2
+        return self.weightClass == model.HEAVY
 
 
     def rotate(self, dim: Vector3) -> Package:
