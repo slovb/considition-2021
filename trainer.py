@@ -9,8 +9,8 @@ with open('secret/apikey.txt', 'r') as f:
 
 fetcher = lambda id: api.fetch_game(api_key, id)['gameStats']
 
-
-def main(maps: list[str]) -> None:
+def main() -> None:
+    maps = ['training1', 'training2']
     games = [Game(api.new_game(api_key, map)) for map in maps]
    
     for game in games:
@@ -22,8 +22,4 @@ def main(maps: list[str]) -> None:
 
 
 if __name__ == "__main__":
-	from sys import argv
-	if len(argv) < 2:
-		main(['training1'])
-	else:
-		main(argv[1:])
+    main()

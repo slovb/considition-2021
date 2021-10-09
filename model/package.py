@@ -23,7 +23,7 @@ class Package:
         return self.dim.x * self.dim.y * self.dim.z
     
     
-    def as_volume(self, pos: Vector3) -> Volume:
+    def as_volume_at(self, pos: Vector3) -> Volume:
         return Volume(
             pos = pos,
             dim = self.dim,

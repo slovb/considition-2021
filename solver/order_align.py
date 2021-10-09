@@ -60,7 +60,7 @@ class OrderAlign(Solver):
         x = pos.x + package.dim.x / 2
         o = self.order_skip_score(package)
         b = -package.calc_volume()
-        if not self.bounding_volume.vol_inside(package.as_volume(pos)):
+        if not self.bounding_volume.vol_inside(package.as_volume_at(pos)):
             b += 10**7
         return sum(d) + w + x*x + b - o**2
     

@@ -1,13 +1,14 @@
 from abc import ABC, abstractmethod
 
 from model import Package, HEAVY, PlacedPackage, Vector2, Vector3, Area, Support, Volume
-
+from .config import Config
 
 class Solver(ABC):
     
-    def __init__(self, vehicle: Vector3, packages: list[Package]):
+    def __init__(self, vehicle: Vector3, packages: list[Package], config: Config = None):
         self.vehicle = vehicle
         self.packages = packages
+        self.config = config if config is not None else Config()
         self.volumes = []
         self.volumes.append(Volume(
             pos = Vector3(0, 0, 0),
@@ -43,7 +44,7 @@ class Solver(ABC):
             package = package
         ))
 
-        package_volume = package.as_volume(pos)
+        package_volume = package.as_volume_at(pos)
         seen = set()
         volumes: list[Volume] = []
         for v in self.volumes:
@@ -57,4 +58,5 @@ class Solver(ABC):
         if not self.bounding_volume.vol_inside(package_volume):
             self.bounding_volume = self.bounding_volume.resize(
                 self.bounding_volume.dim.suprenum(package_volume.get_far_corner()))
-            print('resize ' + str(self.bounding_volume))
+            if self.config.LOG_RESIZE:
+                print('resize ' + str(self.bounding_volume))
