@@ -4,16 +4,20 @@ from dataclasses import dataclass
 from .vector import clamp, Vector2, Vector3
 from .area import Area
 
-@dataclass(order=True, frozen=True)
+@dataclass(frozen=True)
 class Support:
     area: Area
-    weights: tuple
+    beneath: tuple
     
     
-    def add_weights(self, weights: tuple) -> Support:
+    def key(self) -> tuple:
+        return (self.area.key(), ) # ignore beneath for now
+    
+    
+    def add_beneath(self, beneath: tuple) -> Support:
         return Support(
             area = self.area,
-            weights = weights + self.weights
+            beneath = beneath + self.beneath
         )
     
     
@@ -41,5 +45,5 @@ class Support:
                 pos = a.pos.clamp(pos, pos + dim),
                 dim = Vector2(adx, ady)
             ),
-            weights = self.weights
+            beneath = self.beneath
         )

@@ -18,7 +18,7 @@ class Solver(ABC):
                     pos = Vector3(0, 0, 0),
                     dim = Vector2(self.vehicle.x, self.vehicle.y)
                 ),
-                weights = tuple()
+                beneath = tuple()
             )
         ))
         self.bounding_volume = Volume(
@@ -50,9 +50,13 @@ class Solver(ABC):
         for v in self.volumes:
             newVolumes = v.remove(package_volume)
             for vol in newVolumes:
-                if vol not in seen:
-                    seen.add(vol)
+                k = vol.key()
+                if k not in seen:
+                    seen.add(k)
                     volumes.append(vol)
+                else:
+                    pass
+                    # TODO maybe merge supports into a list
         self.volumes = volumes
         
         if not self.bounding_volume.vol_inside(package_volume):

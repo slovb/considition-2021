@@ -8,12 +8,17 @@ from .vector import Vector2, Vector3
 
 import model
 
-@dataclass(order=True, frozen=True)
+@dataclass(frozen=True)
 class Package:
     id: int
     dim: Vector3
     weightClass: int
     orderClass: int
+    
+    
+    def key(self) -> tuple:
+        return (self.id, self.dim.key(), self.weightClass, self.orderClass)
+    
     
     def calc_area(self) -> int:
         return self.dim.x * self.dim.y
@@ -32,7 +37,7 @@ class Package:
                     pos = pos + Vector3(0, 0, self.dim.z),
                     dim = Vector2(self.dim.x, self.dim.y)
                 ),
-                weights = (self.weightClass,)
+                beneath = (self,)
             )
         )
     

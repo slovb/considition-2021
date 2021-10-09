@@ -5,10 +5,14 @@ from dataclasses import dataclass
 clamp = lambda n, lower, upper: max(min(upper, n), lower)
 
 
-@dataclass(order=True, frozen=True)
+@dataclass(frozen=True)
 class Vector2:
     x: int = 0
     y: int = 0
+
+
+    def key(self) -> tuple:
+        return (self.x, self.y)
 
 
     def clamp(self, lower: Vector2, upper: Vector2) -> Vector2:
@@ -32,11 +36,15 @@ class Vector2:
         )
 
 
-@dataclass(order=True, frozen=True)
+@dataclass(frozen=True)
 class Vector3:
     x: int = 0
     y: int = 0
     z: int = 0
+
+
+    def key(self) -> tuple:
+        return (self.x, self.y, self.z)
 
 
     def __add__(self, other) -> Vector3:

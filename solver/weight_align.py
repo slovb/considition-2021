@@ -85,7 +85,7 @@ class WeightAlign(Solver):
         if not package.is_heavy():
             return 1000
         score = 0
-        for wc in vol.support.weights:
+        for wc in vol.support.beneath:
             if wc == 0:
                 score += 50
             elif wc == 1:

@@ -4,10 +4,14 @@ from .vector import Vector3
 from .package import Package
 
 
-@dataclass(order=True, frozen=True)
+@dataclass(frozen=True)
 class PlacedPackage:
     pos: Vector3
     package: Package
+
+
+    def key(self) -> tuple:
+        return (self.pos.key(), self.package.key())
 
 
     def corners(self) -> list[Vector3]:

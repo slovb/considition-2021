@@ -12,11 +12,15 @@ def oneOfLeftTwoOfRight(l: Vector3, r: Vector3):
     ]
 
 
-@dataclass(order=True, frozen=True)
+@dataclass(frozen=True)
 class Volume:
     pos: Vector3
     dim: Vector3
     support: Support
+    
+    
+    def key(self) -> tuple:
+        return (self.pos.key(), self.dim.key(), self.support.key())
 
 
     def pos_inside(self, pos: Vector3) -> bool:
@@ -116,7 +120,7 @@ class Volume:
         volumes.append(Volume(
             r_poses[2],
             r_dims[2],
-            vol.support.add_weights(self.support.weights).crop(r_poses[2], r_dims[2])
+            vol.support.add_beneath(self.support.beneath).crop(r_poses[2], r_dims[2])
         ))
 
         volumes = [vol for vol in volumes if vol.__is_valid()]

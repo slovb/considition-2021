@@ -71,7 +71,9 @@ class ScoreBased(Solver):
         if self.config.ENABLE_BOUNDING:
             score += self.score_bounding(package, pos)
         if self.config.ENABLE_ORDER_SKIP:
-            score += self.score_order_skip(package, pos)
+            score += self.penalty_order_skip(package, pos)
+        if self.config.ENABLE_ORDER_BREAK:
+            score += self.order_break(package, vol)
         return score    
   
 
@@ -96,7 +98,8 @@ class ScoreBased(Solver):
         if not package.is_heavy():
             return 0
         score = 0
-        for wc in vol.support.weights:
+        for p in vol.support.beneath:
+            wc = p.weightClass
             if wc == 0:
                 score += self.config.PENALTY_HEAVY_ON_LIGHT
             elif wc == 1:
@@ -118,12 +121,20 @@ class ScoreBased(Solver):
         return (self.config.MUL_X * x)**self.config.EXP_X
 
     
-    def score_order_skip(self, package: Package, pos: Vector3) -> list:
+    def penalty_order_skip(self, package: Package, pos: Vector3) -> float:
         skips = self.ocLeft[:package.orderClass]
         score = 0
         for i, n in enumerate(skips):
             score += self.config.ORDER_BASE**(len(skips)-i) * n**self.config.EXP_ORDER_N
-        return (self.config.MUL_ORDER_SKIP * score) ** self.config.EXP_ORDER_SKIP
+        return -(self.config.MUL_ORDER_SKIP * score) ** self.config.EXP_ORDER_SKIP
+    
+    
+    def order_break(self, package: Package, vol: Volume) -> float:
+        # if E placed on A then big penalty
+        score = 0
+        for p in vol.support.beneath:
+            score += max(0, package.orderClass - p.orderClass)
+        return self.config.MUL_ORDER_BREAK * score
 
     
     def score_bounding(self, package: Package, pos: Vector3) -> float:

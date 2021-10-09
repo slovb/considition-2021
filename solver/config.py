@@ -1,5 +1,5 @@
 from __future__ import annotations
-from dataclasses import dataclass
+from dataclasses import dataclass, asdict
 
 
 @dataclass(frozen=True)
@@ -31,13 +31,22 @@ class Config:
     MUL_X: float = 1.0
     EXP_X: int = 2
     
+    ENABLE_BOUNDING: bool = True
+    PENALTY_BOUNDING_BREAK: int = 10**7
+    MUL_BOUNDING: float = 1.0
+    EXP_BOUNDING: float = 1.0
+    
     ENABLE_ORDER_SKIP: bool = True
     ORDER_BASE: int = 10
     EXP_ORDER_N: int = 2
     MUL_ORDER_SKIP: float = 1.0
     EXP_ORDER_SKIP: int = 2
     
-    ENABLE_BOUNDING: bool = True
-    PENALTY_BOUNDING_BREAK: int = 10**7
-    MUL_BOUNDING: float = 1.0
-    EXP_BOUNDING: float = 1.0
+    ENABLE_ORDER_BREAK: bool = True
+    MUL_ORDER_BREAK: float = 10000.0
+    
+    
+    def set(self, attr: str, value) -> Config:
+        d = asdict(self)
+        d[attr] = value
+        return Config(**d)
