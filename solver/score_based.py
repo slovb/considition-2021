@@ -6,7 +6,6 @@ from .solver import Solver
 class ScoreBased(Solver):
 
     def initialize(self):
-        self.placed_packages: list[PlacedPackage] = []
         self.set_min()
         ocLeft = [0]*5
         for p in self.packages:
@@ -15,7 +14,7 @@ class ScoreBased(Solver):
 
     
     def solve(self) -> list[PlacedPackage]:
-        self.packages = sorted(self.packages, key=lambda p: p.calc_area(), reverse=True)
+        # self.packages = sorted(self.packages, key=lambda p: p.calc_area(), reverse=True)
         # self.packages = sorted(self.packages, key=lambda p: p.calc_area() * p.dim.z)
         self.packages = sorted(self.packages, key=lambda p: p.orderClass, reverse=True)
         # self.packages = sorted(self.packages, key=lambda p: p.weightClass * p.dim.z, reverse=True)
@@ -26,12 +25,14 @@ class ScoreBased(Solver):
         while len(placed) < len(self.packages):
             packages = [package for package in self.packages if package.id not in placed]
 
+            heavyVolumes = sorted(self.volumes, key=lambda vol: (vol.pos.z, vol.pos.x))
+            otherVolumes = sorted(self.volumes, key=lambda vol: vol.pos.x)
             candidates: list[tuple[Package, Vector3, Volume]] = []
             for package in packages:
                 if package.is_heavy():
-                    self.volumes = sorted(self.volumes, key=lambda vol: (vol.pos.z, vol.pos.x))
+                    self.volumes = heavyVolumes
                 else:
-                    self.volumes = sorted(self.volumes, key=lambda vol: vol.pos.x)
+                    self.volumes = otherVolumes
                 for j in range(6):
                     for where in self.where(package):
                         candidates.append((package,) + where)
@@ -40,9 +41,10 @@ class ScoreBased(Solver):
                     package = package.rotate(package.dim.permutate())
                 if len(candidates) == 0:
                     exit('did not finish')
-            candidates = sorted(candidates, key=lambda c: self.score(c[0], c[1], c[2]))
-            package, pos, _ = candidates[0]
-            self.place(package, pos)
+            # candidates = sorted(candidates, key=lambda c: self.score(c[0], c[1], c[2]))
+            # package, pos, vol = candidates[0]
+            package, pos, vol = min(candidates, key=lambda c: self.score(c[0], c[1], c[2]))
+            self.place(package, pos, vol)
             placed.add(package.id)
             self.ocLeft[package.orderClass] -= 1
             
@@ -139,7 +141,7 @@ class ScoreBased(Solver):
     
     def score_bounding(self, package: Package, pos: Vector3) -> float:
         b = -package.calc_volume()
-        if not self.bounding_volume.vol_inside(package.as_volume_at(pos)):
+        if not self.bounding_volume.package_inside_at(package, pos):
             b += self.config.PENALTY_BOUNDING_BREAK
         return (self.config.MUL_BOUNDING * b) ** self.config.EXP_BOUNDING
 

@@ -3,6 +3,7 @@ from dataclasses import dataclass
 
 from .vector import clamp, Vector2, Vector3
 from .support import Support
+import model.package
 
 def oneOfLeftTwoOfRight(l: Vector3, r: Vector3):
     return [
@@ -36,10 +37,11 @@ class Volume:
 
     
     def vol_inside(self, vol: Volume) -> bool:
-        for p in vol.corners():
-            if not self.pos_inside(p):
-                return False
-        return True
+        return self.pos_inside(vol.pos) and self.pos_inside(vol.get_far_corner())
+
+
+    def package_inside_at(self, package: model.package.Package, pos: Vector3) -> bool:
+        return self.pos_inside(pos) and self.pos_inside(pos + package.dim)
 
     
     def vol_intersect(self, vol: Volume) -> bool:
@@ -49,24 +51,7 @@ class Volume:
         diff = (self.pos + self.pos + self.dim - vol.pos - vol.pos - vol.dim).abs()
         span = self.dim + vol.dim
         return diff.x < span.x and diff.y < span.y and diff.z < span.z
-        
-    
-    def corners(self) -> list[Vector3]:
-        positions = []
-        for x in [0, self.dim.x]:
-            for y in [0, self.dim.y]:
-                for z in [0, self.dim.z]:
-                    positions.append(self.pos + Vector3(x, y, z))
-        return positions
-    
-    
-    def get_midpoint(self) -> Vector3:
-        return Vector3(
-            self.pos.x + self.dim.x / 2,
-            self.pos.y + self.dim.y / 2,
-            self.pos.z + self.dim.z / 2
-        )
-    
+         
     
     def get_far_corner(self) -> Vector3:
         return self.pos + self.dim

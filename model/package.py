@@ -1,5 +1,5 @@
 from __future__ import annotations
-from dataclasses import dataclass
+from dataclasses import dataclass,field
 
 from .area import Area
 from .support import Support
@@ -15,7 +15,9 @@ class Package:
     weightClass: int
     orderClass: int
     
+    __cache: dict = field(default_factory=dict)
     
+        
     def key(self) -> tuple:
         return (self.id, self.dim.key(), self.weightClass, self.orderClass)
     

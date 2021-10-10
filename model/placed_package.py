@@ -2,12 +2,13 @@ from dataclasses import dataclass
 
 from .vector import Vector3
 from .package import Package
-
+from .volume import Volume
 
 @dataclass(frozen=True)
 class PlacedPackage:
     pos: Vector3
     package: Package
+    vol: Volume = None
 
 
     def key(self) -> tuple:
@@ -19,8 +20,7 @@ class PlacedPackage:
         for x in [0, self.package.dim.x]:
             for y in [0, self.package.dim.y]:
                 for z in [0, self.package.dim.z]:
-                    addition = Vector3(x, y, z)
-                    positions.append(self.pos + addition)
+                    positions.append(self.pos + Vector3(x, y, z))
         return positions
 
 

@@ -26,6 +26,7 @@ class Solver(ABC):
             dim = Vector3(0, 0, 0),
             support = None
         )
+        self.placed_packages: list[PlacedPackage] = []
         self.initialize()
 
 
@@ -38,10 +39,11 @@ class Solver(ABC):
         pass
     
 
-    def place(self, package: Package, pos: Vector3):
+    def place(self, package: Package, pos: Vector3, vol: Volume = None):
         self.placed_packages.append(PlacedPackage(
             pos = pos,
-            package = package
+            package = package,
+            vol = vol
         ))
 
         package_volume = package.as_volume_at(pos)
