@@ -1,4 +1,5 @@
 import itertools
+import random
 
 from solver.config import Config
 from solver.config_op import *
@@ -11,7 +12,7 @@ class Searcher:
         self.memory = {}
         
     
-    def displayAndStore(self, value: tuple):
+    def displayAndStore(self, value: tuple) -> None:
         self.history.append(value)
         if len(self.history) > 0:
             print('{}\t\tBest: {}'.format(value, max(self.history)))
@@ -20,7 +21,7 @@ class Searcher:
         print('----------------------------------------------------------------')
 
 
-    def run(self, config: Config, values: tuple):
+    def run(self, config: Config, values: tuple) -> int:
         if values in self.memory:
             return self.memory[values]
         op = set_ops(values)
@@ -33,7 +34,7 @@ class Searcher:
         return score
     
     
-    def search(self, config: Config, settings, depth: int = 4):
+    def search(self, config: Config, settings, depth: int = 4) -> None:
         self.displayAndStore((self.runner(config), 'nop'))
         state = tuple([(name, value, step) for name, value, step in settings])
         results = []
@@ -48,6 +49,37 @@ class Searcher:
             ]
             for option in itertools.product(*options):
                 results.append( (self.run(config, option), option) )
+
+            best_score, best_coord = max(results, key=lambda r: r[0])            
+            if score >= best_score:
+                depth -= 1
+                state = tuple([(name, value, step / 2) for name, value, step in settings])
+            else:
+                state = best_coord
+        
+        for h in sorted(self.history):
+            print(h)
+
+
+    def greedy(self, config: Config, settings, depth: int = 4) -> None:
+        self.displayAndStore((self.runner(config), 'nop'))
+        state = tuple([(name, value, step) for name, value, step in settings])
+        results = []
+        while depth > 0:
+            score = self.run(config, state)
+            options = [
+                [
+                    (name, value - step),
+                    (name, value),
+                    (name, value + step)
+                ] for name, value, step in settings
+            ]
+            states = list(itertools.product(*options))
+            for option in random.sample(states, len(states)):
+                s = self.run(config, option)
+                results.append( (s, option) )
+                if s > score:
+                    break
 
             best_score, best_coord = max(results, key=lambda r: r[0])            
             if score >= best_score:

@@ -25,27 +25,15 @@ def main() -> None:
         PENALTY_NOT_HEAVY=900,
         PENALTY_BOUNDING_BREAK=9000000,
     )
-    # ops = [set_op('PREFERRED_NUM_CANDIDATES', v) for v in range(1, 200)]
-    
-    # experiment with order scoring alternative
-    
-    # ops = [set_op('PENALTY_HEAVY_ON_LIGHT', v) for v in [10, 50, 90, 100, 200, 300, 400, 500, 600, 700, 800, 900, 1000, 10000]]
-    # ops = [nop, set_op('ENABLE_WEIGHT', True)] + [set_op('PENALTY_HEAVY_ON_MEDIUM', v) for v in range(5, 20, 2)]
-    # run_ops(games, config, ops)
-    # search_1_attr(runner, config, 'EXP_X', 3, 1)
     
     searcher = Searcher(get_runner(['training1', 'training2']))
-    
-    # searcher.search(config, [
-    #     ('PENALTY_HEAVY_ON_HEAVY', 5, 2),
-    #     ('PENALTY_HEAVY_ON_MEDIUM', 12, 5),
-    #     ('PENALTY_HEAVY_ON_LIGHT', 50, 20),
-    # ])
-    searcher.search(config, [
-        ('MUL_ORDER_BREAK', 10000.0, 1000.0),
-        ('ORDER_BASE', 10, 2),
-        ('PENALTY_NOT_HEAVY', 1000, 100),
-        ('PENALTY_BOUNDING_BREAK', 10**7, 10**6)
+    searcher.greedy(config, [
+        ('MUL_X', 1.0, 0.1),
+        ('MUL_BOUNDING', 1.0, 0.1),
+        ('MUL_WEIGHT', 10.0, 1.0),
+        ('MUL_SIDE_ALIGN', 1.0, 0.1),
+        ('MUL_ORDER_SKIP', 1.0, 0.1),
+        ('MUL_ORDER_BREAK', 10.0**4, 10.0**3),
     ])
 
 
