@@ -14,11 +14,8 @@ class ScoreBased(Solver):
 
     
     def solve(self) -> list[PlacedPackage]:
-        # self.packages = sorted(self.packages, key=lambda p: p.calc_area(), reverse=True)
-        # self.packages = sorted(self.packages, key=lambda p: p.calc_area() * p.dim.z)
-        self.packages = sorted(self.packages, key=lambda p: p.orderClass, reverse=True)
-        # self.packages = sorted(self.packages, key=lambda p: p.weightClass * p.dim.z, reverse=True)
-        self.packages = sorted(self.packages, key=lambda p: p.weightClass, reverse=True)
+        # self.packages = sorted(self.packages, key=lambda p: p.orderClass, reverse=True)
+        # self.packages = sorted(self.packages, key=lambda p: p.weightClass, reverse=True)
         
         placed = set()
         
@@ -29,10 +26,10 @@ class ScoreBased(Solver):
             otherVolumes = sorted(self.volumes, key=lambda vol: vol.pos.x)
             candidates: list[tuple[Package, Vector3, Volume]] = []
             for package in packages:
-                if package.is_heavy():
-                    self.volumes = heavyVolumes
-                else:
-                    self.volumes = otherVolumes
+                # if package.is_heavy():
+                #     self.volumes = heavyVolumes
+                # else:
+                #     self.volumes = otherVolumes
                 for j in range(6):
                     for where in self.where(package):
                         candidates.append((package,) + where)
@@ -41,8 +38,6 @@ class ScoreBased(Solver):
                     package = package.rotate(package.dim.permutate())
                 if len(candidates) == 0:
                     exit('did not finish')
-            # candidates = sorted(candidates, key=lambda c: self.score(c[0], c[1], c[2]))
-            # package, pos, vol = candidates[0]
             package, pos, vol = min(candidates, key=lambda c: self.score(c[0], c[1], c[2]))
             self.place(package, pos, vol)
             placed.add(package.id)
