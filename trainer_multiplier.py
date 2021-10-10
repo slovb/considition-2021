@@ -7,7 +7,7 @@ def main() -> None:
     config = Config(
         LOG_PLACED=False,
         LOG_RESIZE=False,
-        PREFERRED_NUM_CANDIDATES=10000,
+        PREFERRED_NUM_CANDIDATES=50,
         
         ENABLE_BOUNDING=True,
         ENABLE_HEAVY_PRIORITY=True,

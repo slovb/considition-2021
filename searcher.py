@@ -4,20 +4,27 @@ import random
 from solver.config import Config
 from solver.config_op import *
 
+same = lambda value, step: value
+add = lambda value, step: value + step
+rem = lambda value, step: value - step
+madd = lambda value, step: value * (1.0 + step)
+mrem = lambda value, step: value * (1.0 - step)
+
+
 def additive_options(state):
     '''all the options for setting each parameters, additive steps'''
     return [[
-        (name, value - step, step),
-        (name, value, step),
-        (name, value + step, step)] for name, value, step in state]
+        (name, rem(value, step), step, rem),
+        (name, value,            step, same),
+        (name, add(value, step), step, add)] for name, value, step, _ in state]
 
 
 def scaling_options(state):
     '''all the options for setting each parameters, scaling steps'''
     return [[
-        (name, value * (1.0 - step), step),
-        (name, value, step),
-        (name, value * (1.0 + step), step)] for name, value, step in state]
+        (name, mrem(value, step), step, mrem),
+        (name, value,             step, same),
+        (name, madd(value, step), step, madd)] for name, value, step, _ in state]
 
 from log import log
 
@@ -32,7 +39,7 @@ class Searcher:
 
     def search(self, config: Config, settings, depth: int = 4, greedy: bool = True, options_builder = additive_options) -> None:
         self.__displayAndStore((self.runner(config), 'nop'))
-        state = tuple([(name, value, step) for name, value, step in settings]) # describe the datacube as name, value, radius tripplets
+        state = tuple([(name, value, step, same) for name, value, step in settings]) # describe the datacube as name, value, radius tripplets
         results: list[int, tuple] = []
         while depth > 0:
             score = self.__run(config, state) # baseline
@@ -50,6 +57,17 @@ class Searcher:
             if best_score > score:
                 log('log/state.txt', '{}, {}'.format(best_score, str(best_state)))
                 state = best_state
+                score = best_score
+                while True: # try to go in that direction
+                    another = tuple([(name, stepper(value, step), step, stepper) for name, value, step, stepper in state])
+                    maybe = self.__run(config, another)
+                    results.append( (s, another) )
+                    if maybe > score:
+                        log('log/state.txt', '{}, {}'.format(maybe, str(another)))
+                        state = another
+                        score = maybe
+                    else:
+                        break
             else:
                 log('log/state.txt', '{}, {}'.format(score, str(state)))
                 depth -= 1
