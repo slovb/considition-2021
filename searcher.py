@@ -19,6 +19,8 @@ def scaling_options(state):
         (name, value, step),
         (name, value * (1.0 + step), step)] for name, value, step in state]
 
+from log import log
+
 
 class Searcher:
     
@@ -46,8 +48,10 @@ class Searcher:
 
             best_score, best_state = max(results, key=lambda r: r[0])            
             if best_score > score:
+                log('log/state.txt', '{}, {}'.format(best_score, str(best_state)))
                 state = best_state
             else:
+                log('log/state.txt', '{}, {}'.format(score, str(state)))
                 depth -= 1
                 state = tuple([(name, value, step / 2) for name, value, step in state])
         
