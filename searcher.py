@@ -10,83 +10,57 @@ class Searcher:
         self.runner = runner
         self.history = []
         self.memory = {}
+
+
+    def search(self, config: Config, settings, depth: int = 4, greedy: bool = True) -> None:
+        self.__displayAndStore((self.runner(config), 'nop'))
+        state = tuple([(name, value, step) for name, value, step in settings]) # describe the datacube as name, value, radius tripplets
+        results: list[int, tuple] = []
+        while depth > 0:
+            score = self.__run(config, state) # baseline
+            
+            options = [
+                [
+                    (name, value - step, step),
+                    (name, value, step),
+                    (name, value + step, step)
+                ] for name, value, step in state
+            ] # all the options for setting each parameter
+            states = list(itertools.product(*options)) # as a set of states
+            
+            for option in random.sample(states, len(states)): # random iteration because greed
+                s = self.__run(config, option)
+                results.append( (s, option) )
+                if greedy and s > score:
+                    break
+
+            best_score, best_state = max(results, key=lambda r: r[0])            
+            if best_score > score:
+                state = best_state
+            else:
+                depth -= 1
+                state = tuple([(name, value, step / 2) for name, value, step in state])
         
-    
-    def displayAndStore(self, value: tuple) -> None:
+        for h in sorted(self.history):
+            print(h)        
+
+
+    def __displayAndStore(self, value: tuple) -> None:
         self.history.append(value)
         if len(self.history) > 0:
-            print('{}\t\tBest: {}'.format(value, max(self.history)))
+            print('{}\nBest: {}'.format(value, max(self.history)))
         else:
             print(value)
         print('----------------------------------------------------------------')
 
 
-    def run(self, config: Config, values: tuple) -> int:
-        if values in self.memory:
-            return self.memory[values]
+    def __run(self, config: Config, values: tuple) -> int:
         op = set_ops(values)
-        co = op.action(config)
-        score = self.runner(co)
-        self.memory[values] = score
+        if op.name in self.memory:
+            return self.memory[op.name]
+        score = self.runner(op.action(config))
+        self.memory[op.name] = score
         
         entry = (score, op.name)
-        self.displayAndStore(entry)
+        self.__displayAndStore(entry)
         return score
-    
-    
-    def search(self, config: Config, settings, depth: int = 4) -> None:
-        self.displayAndStore((self.runner(config), 'nop'))
-        state = tuple([(name, value, step) for name, value, step in settings])
-        results = []
-        while depth > 0:
-            score = self.run(config, state)
-            options = [
-                [
-                    (name, value - step),
-                    (name, value),
-                    (name, value + step)
-                ] for name, value, step in settings
-            ]
-            for option in itertools.product(*options):
-                results.append( (self.run(config, option), option) )
-
-            best_score, best_coord = max(results, key=lambda r: r[0])            
-            if score >= best_score:
-                depth -= 1
-                state = tuple([(name, value, step / 2) for name, value, step in settings])
-            else:
-                state = best_coord
-        
-        for h in sorted(self.history):
-            print(h)
-
-
-    def greedy(self, config: Config, settings, depth: int = 4) -> None:
-        self.displayAndStore((self.runner(config), 'nop'))
-        state = tuple([(name, value, step) for name, value, step in settings])
-        results = []
-        while depth > 0:
-            score = self.run(config, state)
-            options = [
-                [
-                    (name, value - step),
-                    (name, value),
-                    (name, value + step)
-                ] for name, value, step in settings
-            ]
-            states = list(itertools.product(*options))
-            for option in random.sample(states, len(states)):
-                s = self.run(config, option)
-                results.append( (s, option) )
-                if s > score:
-                    break
-
-            best_score, best_coord = max(results, key=lambda r: r[0])            
-            if score >= best_score:
-                depth -= 1
-                state = tuple([(name, value, step / 2) for name, value, step in settings])
-            else:
-                state = best_coord
-        
-        for h in sorted(self.history):
-            print(h)

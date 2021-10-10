@@ -35,17 +35,12 @@ def main() -> None:
     # search_1_attr(runner, config, 'EXP_X', 3, 1)
     
     searcher = Searcher(get_runner(['training1', 'training2']))
-    
-    # searcher.search(config, [
-    #     ('PENALTY_HEAVY_ON_HEAVY', 5, 2),
-    #     ('PENALTY_HEAVY_ON_MEDIUM', 12, 5),
-    #     ('PENALTY_HEAVY_ON_LIGHT', 50, 20),
-    # ])
+
     searcher.search(config, [
-        ('MUL_ORDER_BREAK', 10000.0, 1000.0),
-        ('ORDER_BASE', 10, 2),
-        ('PENALTY_NOT_HEAVY', 1000, 100),
-        ('PENALTY_BOUNDING_BREAK', 10**7, 10**6)
+        ('MUL_ORDER_BREAK', 9000.0, 900.0),
+        ('ORDER_BASE', 12, 1),
+        ('PENALTY_NOT_HEAVY', 900, 90),
+        ('PENALTY_BOUNDING_BREAK', 9*10**6, 9*10**5)
     ])
 
 

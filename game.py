@@ -1,5 +1,3 @@
-import api
-
 from model import Package, Vector3, PlacedPackage
 
 from solver.config import Config

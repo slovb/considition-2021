@@ -27,7 +27,7 @@ def main() -> None:
     )
     
     searcher = Searcher(get_runner(['training1', 'training2']))
-    searcher.greedy(config, [
+    searcher.search(config, [
         ('MUL_X', 1.0, 0.1),
         ('MUL_BOUNDING', 1.0, 0.1),
         ('MUL_WEIGHT', 10.0, 1.0),
