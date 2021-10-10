@@ -30,11 +30,11 @@ def main() -> None:
     searcher.search(config, [
         ('MUL_X', 1.0, 0.1),
         ('MUL_BOUNDING', 1.0, 0.1),
-        ('MUL_WEIGHT', 10.0, 1.0),
+        ('MUL_WEIGHT', 10.0, 0.1),
         ('MUL_SIDE_ALIGN', 1.0, 0.1),
         ('MUL_ORDER_SKIP', 1.0, 0.1),
-        ('MUL_ORDER_BREAK', 10.0**4, 10.0**3),
-    ])
+        ('MUL_ORDER_BREAK', 10.0**4, 0.1),
+    ], options_builder=scaling_options)
 
 
 if __name__ == "__main__":

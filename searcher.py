@@ -15,9 +15,9 @@ def additive_options(state):
 def scaling_options(state):
     '''all the options for setting each parameters, scaling steps'''
     return [[
-        (name, value / step, step),
+        (name, value * (1.0 - step), step),
         (name, value, step),
-        (name, value * step, step)] for name, value, step in state]
+        (name, value * (1.0 + step), step)] for name, value, step in state]
 
 
 class Searcher:
