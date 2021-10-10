@@ -27,12 +27,12 @@ def main() -> None:
         PENALTY_NOT_HEAVY=900,
         PENALTY_BOUNDING_BREAK=9000000,
         
-        MUL_X = 1.2, 
-        MUL_BOUNDING = 0.99,
+        MUL_X = 1.33, 
+        MUL_BOUNDING = 1.09,
         MUL_WEIGHT = 12.1,
-        MUL_SIDE_ALIGN = 0.9,
+        MUL_SIDE_ALIGN = 1.09,
         MUL_ORDER_SKIP = 0.81,
-        MUL_ORDER_BREAK = 9900.0,
+        MUL_ORDER_BREAK = 10890.0,
     )
     
     searcher = Searcher(get_runner(['training1', 'training2']))
@@ -42,7 +42,7 @@ def main() -> None:
         ('MUL_WEIGHT', config.MUL_WEIGHT, 0.1),
         ('MUL_SIDE_ALIGN', config.MUL_SIDE_ALIGN, 0.1),
         ('MUL_ORDER_SKIP', config.MUL_ORDER_SKIP, 0.1),
-        ('MUL_ORDER_BREAK', config.ENABLE_ORDER_BREAK, 0.1),
+        ('MUL_ORDER_BREAK', config.MUL_ORDER_BREAK, 0.1),
     ], options_builder=scaling_options)
 
 
