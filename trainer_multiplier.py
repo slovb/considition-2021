@@ -1,6 +1,6 @@
 from runner import get_runner
 from solver.config import Config
-from searcher import Searcher
+from searcher import Searcher, scaling_options
 
 
 def main() -> None:  

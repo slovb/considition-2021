@@ -4,6 +4,22 @@ import random
 from solver.config import Config
 from solver.config_op import *
 
+def additive_options(state):
+    '''all the options for setting each parameters, additive steps'''
+    return [[
+        (name, value - step, step),
+        (name, value, step),
+        (name, value + step, step)] for name, value, step in state]
+
+
+def scaling_options(state):
+    '''all the options for setting each parameters, scaling steps'''
+    return [[
+        (name, value / step, step),
+        (name, value, step),
+        (name, value * step, step)] for name, value, step in state]
+
+
 class Searcher:
     
     def __init__(self, runner: Callable[[Config], int]):
@@ -12,20 +28,14 @@ class Searcher:
         self.memory = {}
 
 
-    def search(self, config: Config, settings, depth: int = 4, greedy: bool = True) -> None:
+    def search(self, config: Config, settings, depth: int = 4, greedy: bool = True, options_builder = additive_options) -> None:
         self.__displayAndStore((self.runner(config), 'nop'))
         state = tuple([(name, value, step) for name, value, step in settings]) # describe the datacube as name, value, radius tripplets
         results: list[int, tuple] = []
         while depth > 0:
             score = self.__run(config, state) # baseline
             
-            options = [
-                [
-                    (name, value - step, step),
-                    (name, value, step),
-                    (name, value + step, step)
-                ] for name, value, step in state
-            ] # all the options for setting each parameter
+            options = options_builder(state) # all the options for setting each parameter
             states = list(itertools.product(*options)) # as a set of states
             
             for option in random.sample(states, len(states)): # random iteration because greed
@@ -42,7 +52,7 @@ class Searcher:
                 state = tuple([(name, value, step / 2) for name, value, step in state])
         
         for h in sorted(self.history):
-            print(h)        
+            print(h)
 
 
     def __displayAndStore(self, value: tuple) -> None:
