@@ -4,7 +4,7 @@ import random
 from solver.config import Config
 from solver.config_op import *
 
-same = lambda value, step: value
+same = lambda value, _: value
 add = lambda value, step: value + step
 rem = lambda value, step: value - step
 madd = lambda value, step: value * (1.0 + step)
@@ -38,6 +38,7 @@ class Searcher:
 
 
     def search(self, config: Config, settings, depth: int = 4, greedy: bool = True, options_builder = additive_options) -> None:
+        anotherStep = lambda state: tuple([(name, stepper(value, step), step, stepper) for name, value, step, stepper in state])
         self.__displayAndStore((self.runner(config), 'nop'))
         state = tuple([(name, value, step, same) for name, value, step in settings]) # describe the datacube as name, value, radius tripplets
         results: list[int, tuple] = []
@@ -48,9 +49,13 @@ class Searcher:
             states = list(itertools.product(*options)) # as a set of states
             
             for option in random.sample(states, len(states)): # random iteration because greed
-                s = self.__run(config, option)
-                results.append( (s, option) )
-                if greedy and s > score:
+                optionScore = self.__run(config, option)
+                results.append( (optionScore, option) )
+                while optionScore == score:
+                    option = anotherStep(option)
+                    optionScore = self.__run(config, option)
+                    results.append( (optionScore, option) )
+                if greedy and optionScore > score:
                     break
 
             best_score, best_state = max(results, key=lambda r: r[0])            
@@ -59,13 +64,13 @@ class Searcher:
                 state = best_state
                 score = best_score
                 while True: # try to go in that direction
-                    another = tuple([(name, stepper(value, step), step, stepper) for name, value, step, stepper in state])
-                    maybe = self.__run(config, another)
-                    results.append( (s, another) )
-                    if maybe > score:
-                        log('log/state.txt', '{}, {}'.format(maybe, str(another)))
+                    another = anotherStep(state)
+                    anotherScore = self.__run(config, another)
+                    results.append( (anotherScore, another) )
+                    if anotherScore > score:
+                        log('log/state.txt', '{}, {}'.format(anotherScore, str(another)))
                         state = another
-                        score = maybe
+                        score = anotherScore
                     else:
                         break
             else:

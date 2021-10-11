@@ -7,7 +7,7 @@ def main() -> None:
     config = Config(
         LOG_PLACED=False,
         LOG_RESIZE=False,
-        PREFERRED_NUM_CANDIDATES=50,
+        PREFERRED_NUM_CANDIDATES=200,
         
         ENABLE_BOUNDING=True,
         ENABLE_HEAVY_PRIORITY=True,
@@ -29,7 +29,7 @@ def main() -> None:
         
         MUL_X = 1.33, 
         MUL_BOUNDING = 1.09,
-        MUL_WEIGHT = 12.1,
+        MUL_WEIGHT = 10000.1,
         MUL_SIDE_ALIGN = 1.09,
         MUL_ORDER_SKIP = 0.81,
         MUL_ORDER_BREAK = 10890.0,
