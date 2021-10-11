@@ -62,26 +62,31 @@ class Searcher:
 
             best_score, best_state = max(results, key=lambda r: r[0])            
             if best_score > score:
-                log('log/state.txt', '{}, {}'.format(best_score, str(best_state)))
+                self.__log(config, best_score, best_state)
                 state = best_state
                 score = best_score
                 while True: # try to go in that direction
-                    another = anotherStep(state)
-                    anotherScore = self.__run(config, another)
-                    results.append( (anotherScore, another) )
-                    if anotherScore > score:
-                        log('log/state.txt', '{}, {}'.format(anotherScore, str(another)))
-                        state = another
-                        score = anotherScore
+                    another_state = anotherStep(state)
+                    another_score = self.__run(config, another_state)
+                    results.append( (another_score, another_state) )
+                    if another_score > score:
+                        self.__log(config, another_score, another_state)
+                        state = another_state
+                        score = another_score
                     else:
                         break
             else:
-                log('log/state.txt', '{}, {}'.format(score, str(state)))
+                self.__log(config, score, state)
                 depth -= 1
                 state = tuple([(name, value, step / 2, stepper) for name, value, step, stepper in state])
         
         for h in sorted(self.history):
             print(h)
+
+
+    def __log(self, config: Config, score: int, state: tuple):
+        op = set_ops(state)
+        log('log/config.txt', '{}, {}, {}'.format(score, op.name, op.action(config)))
 
 
     def __displayAndStore(self, value: tuple) -> None:

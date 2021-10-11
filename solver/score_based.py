@@ -37,7 +37,8 @@ class ScoreBased(Solver):
                         package = package.rotate(package.dim.flip())
                     package = package.rotate(package.dim.permutate())
                 if len(candidates) == 0:
-                    exit('did not finish')
+                    print('did not finish')
+                    return self.placed_packages
             package, pos, vol = min(candidates, key=lambda c: self.score(c[0], c[1], c[2]))
             self.place(package, pos, vol)
             placed.add(package.id)

@@ -19,15 +19,15 @@ def main() -> None:
         ENABLE_X=True,
         
         # PENALTY_HEAVY_ON_HEAVY=3,
+        PENALTY_HEAVY_ON_MEDIUM=17,
+        PENALTY_HEAVY_ON_LIGHT=70,
         PENALTY_HEAVY_ON_HEAVY=0, # testing a bit of intuition
-        # PENALTY_HEAVY_ON_MEDIUM=17,
-        # PENALTY_HEAVY_ON_LIGHT=70,
-        PENALTY_HEAVY_ON_MEDIUM=1700,
-        PENALTY_HEAVY_ON_LIGHT=700000,
+        # PENALTY_HEAVY_ON_MEDIUM=1700,
+        # PENALTY_HEAVY_ON_LIGHT=700000,
         
         ORDER_BASE=12,
-        # PENALTY_NOT_HEAVY=900,
-        PENALTY_NOT_HEAVY=900000000,
+        PENALTY_NOT_HEAVY=900,
+        # PENALTY_NOT_HEAVY=900000000,
         PENALTY_BOUNDING_BREAK=9000000,
         
         # MUL_X = 1.33, MUL_BOUNDING = 1.09, MUL_WEIGHT = 10000.1, MUL_SIDE_ALIGN = 1.09, MUL_ORDER_SKIP = 0.81, MUL_ORDER_BREAK = 10890.0,
@@ -37,7 +37,7 @@ def main() -> None:
     
     step = 0.5
     searcher = Searcher(get_runner(['training1', 'training2']))
-    settings = [(name, config[name], step) for name in ['MUL_X', 'MUL_BOUNDING', 'MUL_WEIGHT', 'MUL_SIDE_ALIGN', 'MUL_ORDER_SKIP', 'MUL_ORDER_BREAK']]
+    settings = [(name, getattr(config, name), step) for name in ['MUL_X', 'MUL_BOUNDING', 'MUL_WEIGHT', 'MUL_SIDE_ALIGN', 'MUL_ORDER_SKIP', 'MUL_ORDER_BREAK']]
     searcher.search(config, settings, options_builder=scaling_options)
 
 
