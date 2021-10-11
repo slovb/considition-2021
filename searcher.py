@@ -37,7 +37,7 @@ class Searcher:
         self.memory = {}
 
 
-    def search(self, config: Config, settings, depth: int = 4, greedy: bool = True, options_builder = additive_options) -> None:
+    def search(self, config: Config, settings, depth: int = 4, greedy: bool = True, options_builder = additive_options) -> ConfigOp:
         anotherStep = lambda state: tuple([(name, stepper(value, step), step, stepper) for name, value, step, stepper in state])
         self.__displayAndStore((self.runner(config), 'nop'))
         state = tuple([(name, value, step, same) for name, value, step in settings]) # describe the datacube as name, value, radius tripplets
@@ -82,6 +82,7 @@ class Searcher:
         
         for h in sorted(self.history):
             print(h)
+        return set_ops(state)
 
 
     def __log(self, config: Config, score: int, state: tuple):
