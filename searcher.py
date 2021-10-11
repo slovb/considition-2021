@@ -49,6 +49,8 @@ class Searcher:
             states = list(itertools.product(*options)) # as a set of states
             
             for option in random.sample(states, len(states)): # random iteration because greed
+                if all([stepper == same for _, _, _, stepper in option]):
+                    continue
                 optionScore = self.__run(config, option)
                 results.append( (optionScore, option) )
                 while optionScore == score:
@@ -94,6 +96,8 @@ class Searcher:
     def __run(self, config: Config, values: tuple) -> int:
         op = set_ops(values)
         if op.name in self.memory:
+            entry = (self.memory[op.name], op.name)
+            self.__displayAndStore(entry)
             return self.memory[op.name]
         score = self.runner(op.action(config))
         self.memory[op.name] = score
