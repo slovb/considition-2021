@@ -37,9 +37,9 @@ class Searcher:
         self.memory = {}
 
 
-    def search(self, config: Config, settings, depth: int = 4, greedy: bool = True, options_builder = additive_options) -> ConfigOp:
+    def search(self, config: Config, settings, depth: int = 4, step_max = 5, greedy: bool = True, options_builder = additive_options) -> ConfigOp:
         anotherStep = lambda state: tuple([(name, stepper(value, step), step, stepper) for name, value, step, stepper in state])
-        self.__displayAndStore((self.runner(config), 'nop'))
+        # self.__displayAndStore((self.runner(config), 'nop'))
         state = tuple([(name, value, step, same) for name, value, step in settings]) # describe the datacube as name, value, radius tripplets
         results: list[int, tuple] = []
         while depth > 0:
@@ -53,10 +53,12 @@ class Searcher:
                     continue
                 optionScore = self.__run(config, option)
                 results.append( (optionScore, option) )
-                while optionScore == score:
+                count = 0
+                while optionScore == score and count < step_max:
                     option = anotherStep(option)
                     optionScore = self.__run(config, option)
                     results.append( (optionScore, option) )
+                    count += 1
                 if greedy and optionScore > score:
                     break
 
@@ -65,16 +67,21 @@ class Searcher:
                 self.__log(config, best_score, best_state)
                 state = best_state
                 score = best_score
-                while True: # try to go in that direction
-                    another_state = anotherStep(state)
+                count = 0
+                another_state = state
+                while count < step_max: # try to go in that direction
+                    another_state = anotherStep(another_state)
                     another_score = self.__run(config, another_state)
                     results.append( (another_score, another_state) )
                     if another_score > score:
                         self.__log(config, another_score, another_state)
                         state = another_state
                         score = another_score
+                    elif another_score == score:
+                        pass
                     else:
                         break
+                    count += 1
             else:
                 self.__log(config, score, state)
                 depth -= 1
