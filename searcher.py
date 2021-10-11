@@ -78,7 +78,7 @@ class Searcher:
             else:
                 log('log/state.txt', '{}, {}'.format(score, str(state)))
                 depth -= 1
-                state = tuple([(name, value, step / 2) for name, value, step in state])
+                state = tuple([(name, value, step / 2, stepper) for name, value, step, stepper in state])
         
         for h in sorted(self.history):
             print(h)
