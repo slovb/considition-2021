@@ -31,8 +31,10 @@ def main() -> None:
         MUL_X = 7.056158465317506, MUL_BOUNDING = 1.9355876185387513, MUL_WEIGHT = 62949116.06840276, MUL_SIDE_ALIGN = 5.498546002734376, MUL_ORDER_SKIP = 2.791446089212012, MUL_ORDER_BREAK = 24269.366582027556
     )
     
-    
-    for step, depth in [(0.5, 1), (0.5, 1), (0.5, 1), (0.2, 2), (0.2, 2), (0.1, 4)]:
+    runner = get_runner(['training1', 'training2'])
+    score = runner(config)
+    print('baseline: {}'.format(score))
+    for step, depth in [(0.2, 2), (0.2, 2), (0.1, 4)]:
         for attr in [
             'PENALTY_BOUNDING_BREAK',
             'ORDER_BASE',
@@ -45,11 +47,15 @@ def main() -> None:
             'MUL_SIDE_ALIGN',
             'MUL_ORDER_SKIP',
             'MUL_ORDER_BREAK' ]:
-            searcher = Searcher(get_runner(['training1', 'training2']))
+            searcher = Searcher(runner)
             settings = [(name, getattr(config, name), step) for name in [attr]]
-            cop = searcher.search(config, settings, depth=depth, options_builder=scaling_options)
-            print('best c-op {}'.format(cop.name))
-            config = cop.action(config)
+            cop, s = searcher.search(config, settings, depth=depth, options_builder=scaling_options)
+            if s > score:
+                score = s
+                print('best ({}) from {}'.format(score, cop.name))
+            else:
+                print('no improvement from {} to {}'.format(getattr(config, attr), cop.name))
+            config = cop.action(config) # just in case the attribute got decreased
         print(config)
 
 

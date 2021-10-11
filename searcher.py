@@ -37,11 +37,12 @@ class Searcher:
         self.memory = {}
 
 
-    def search(self, config: Config, settings, depth: int = 4, step_max = 5, greedy: bool = True, options_builder = additive_options) -> ConfigOp:
+    def search(self, config: Config, settings, depth: int = 4, step_max = 5, greedy: bool = True, options_builder = additive_options) -> tuple[ConfigOp, int]:
         anotherStep = lambda state: tuple([(name, stepper(value, step), step, stepper) for name, value, step, stepper in state])
         # self.__displayAndStore((self.runner(config), 'nop'))
         state = tuple([(name, value, step, same) for name, value, step in settings]) # describe the datacube as name, value, radius tripplets
         results: list[int, tuple] = []
+        score = 0
         while depth > 0:
             score = self.__run(config, state) # baseline
             
@@ -62,7 +63,8 @@ class Searcher:
                 if greedy and optionScore > score:
                     break
 
-            best_score, best_state = max(results, key=lambda r: r[0])            
+            best_score, _ = max(results, key=lambda r: r[0])
+            _, best_state = min([res for res in results if res[0] == best_score], key=lambda res: self.__state_value_sum(res[1])) # prefer lowest value
             if best_score > score:
                 self.__log(config, best_score, best_state)
                 state = best_state
@@ -89,7 +91,12 @@ class Searcher:
         
         for h in sorted(self.history):
             print(h)
-        return set_ops(state)
+        _, state = min([res for res in results if res[0] == score], key=lambda res: self.__state_value_sum(res[1])) # prefer lowest value
+        return set_ops(state), score
+
+
+    def __state_value_sum(self, state: tuple):
+        return sum([value for _, value, _, _ in state])
 
 
     def __log(self, config: Config, score: int, state: tuple):
