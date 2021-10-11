@@ -7,7 +7,7 @@ def main() -> None:
     config = Config(
         LOG_PLACED=False,
         LOG_RESIZE=False,
-        PREFERRED_NUM_CANDIDATES=50,
+        PREFERRED_NUM_CANDIDATES=200,
         
         ENABLE_BOUNDING=True,
         ENABLE_HEAVY_PRIORITY=True,
@@ -20,11 +20,14 @@ def main() -> None:
         
         # PENALTY_HEAVY_ON_HEAVY=3,
         PENALTY_HEAVY_ON_HEAVY=0, # testing a bit of intuition
-        PENALTY_HEAVY_ON_MEDIUM=17,
-        PENALTY_HEAVY_ON_LIGHT=70,   
+        # PENALTY_HEAVY_ON_MEDIUM=17,
+        # PENALTY_HEAVY_ON_LIGHT=70,
+        PENALTY_HEAVY_ON_MEDIUM=1700,
+        PENALTY_HEAVY_ON_LIGHT=700000,
         
         ORDER_BASE=12,
-        PENALTY_NOT_HEAVY=900,
+        # PENALTY_NOT_HEAVY=900,
+        PENALTY_NOT_HEAVY=900000000,
         PENALTY_BOUNDING_BREAK=9000000,
         
         MUL_X = 1.33, 
@@ -37,12 +40,12 @@ def main() -> None:
     
     searcher = Searcher(get_runner(['training1', 'training2']))
     searcher.search(config, [
-        ('MUL_X', config.MUL_X, 0.1),
-        ('MUL_BOUNDING', config.MUL_BOUNDING, 0.1),
-        ('MUL_WEIGHT', config.MUL_WEIGHT, 0.1),
-        ('MUL_SIDE_ALIGN', config.MUL_SIDE_ALIGN, 0.1),
-        ('MUL_ORDER_SKIP', config.MUL_ORDER_SKIP, 0.1),
-        ('MUL_ORDER_BREAK', config.MUL_ORDER_BREAK, 0.1),
+        ('MUL_X', config.MUL_X, 0.05),
+        ('MUL_BOUNDING', config.MUL_BOUNDING, 0.05),
+        ('MUL_WEIGHT', config.MUL_WEIGHT, 0.05),
+        ('MUL_SIDE_ALIGN', config.MUL_SIDE_ALIGN, 0.05),
+        ('MUL_ORDER_SKIP', config.MUL_ORDER_SKIP, 0.05),
+        ('MUL_ORDER_BREAK', config.MUL_ORDER_BREAK, 0.05),
     ], options_builder=scaling_options)
 
 
