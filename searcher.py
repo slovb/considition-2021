@@ -45,6 +45,7 @@ class Searcher:
         score = 0
         while depth > 0:
             score = self.__run(config, state) # baseline
+            results.append( (score, state) )
             
             options = options_builder(state) # all the options for setting each parameter
             states = list(itertools.product(*options)) # as a set of states
@@ -63,8 +64,8 @@ class Searcher:
                 if greedy and optionScore > score:
                     break
 
-            best_score, _ = max(results, key=lambda r: r[0])
-            _, best_state = min([res for res in results if res[0] == best_score], key=lambda res: self.__state_value_sum(res[1])) # prefer lowest value
+            best_score = max([s for s, _ in results])
+            best_state = min([x for s, x in results if s == best_score], key=self.__state_value_sum) # prefer lowest value
             if best_score > score:
                 self.__log(config, best_score, best_state)
                 state = best_state
@@ -91,7 +92,7 @@ class Searcher:
         
         for h in sorted(self.history):
             print(h)
-        _, state = min([res for res in results if res[0] == score], key=lambda res: self.__state_value_sum(res[1])) # prefer lowest value
+        state = min([x for s, x in results if s == score], key=self.__state_value_sum) # prefer lowest value
         return set_ops(state), score
 
 
@@ -107,7 +108,7 @@ class Searcher:
     def __displayAndStore(self, value: tuple) -> None:
         self.history.append(value)
         if len(self.history) > 0:
-            print('{}\nBest: {}'.format(value, max(self.history)))
+            print('{}\nGood: {}'.format(value, max(self.history)))
         else:
             print(value)
         print('----------------------------------------------------------------')

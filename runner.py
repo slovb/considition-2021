@@ -13,6 +13,13 @@ with open('secret/apikey.txt', 'r') as f:
 fetcher = lambda id: api.fetch_game(api_key, id)['gameStats']
 
 
+def get_randomized_runner(maps: list[str]) -> Callable[[Config], int]:
+    games = [Game(api.new_game(api_key, map)) for map in maps]
+    import random
+    for game in games:
+        random.shuffle(game.packages)
+    return lambda config: run_games(games, config)
+
 def get_runner(maps: list[str]) -> Callable[[Config], int]:
     games = [Game(api.new_game(api_key, map)) for map in maps]
     return lambda config: run_games(games, config)

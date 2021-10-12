@@ -11,6 +11,7 @@ class ScoreBased(Solver):
         for p in self.packages:
             ocLeft[p.orderClass] += 1
         self.ocLeft = ocLeft
+        self.maxX = 0
 
     
     def solve(self) -> list[PlacedPackage]:
@@ -43,6 +44,7 @@ class ScoreBased(Solver):
             self.place(package, pos, vol)
             placed.add(package.id)
             self.ocLeft[package.orderClass] -= 1
+            self.maxX = max(self.maxX, package.dim.x + pos.x)
             
             if self.config.LOG_PLACED:
                 print('{}\t{}\t{}\t@ {}'.format(
@@ -72,6 +74,8 @@ class ScoreBased(Solver):
             score += self.penalty_order_skip(package, pos)
         if self.config.ENABLE_ORDER_BREAK:
             score += self.order_break(package, vol)
+        if self.config.ENABLE_BOUNDED_X:
+            score += self.score_bounded_x(package, pos)
         return score    
   
 
@@ -142,6 +146,10 @@ class ScoreBased(Solver):
         return (self.config.MUL_BOUNDING * b) ** self.config.EXP_BOUNDING
 
 
+    def score_bounded_x(self, package: Package, pos: Vector3) -> float:
+        return self.config.MUL_BOUNDED_X * max(0, package.dim.x + pos.x - self.maxX)
+
+
     def where(self, package: Package) -> list[tuple[Vector3, Volume]]:
         positions: list[tuple[Vector3, Volume]] = []
         for vol in self.volumes:
@@ -162,7 +170,7 @@ class ScoreBased(Solver):
                 for p in candidates:
                     if vol.vol_inside(Volume(p, package.dim, None)):
                         positions.append((p, vol))
-            if len(positions) > self.config.PREFERRED_NUM_CANDIDATES:
+            if self.config.ENABLE_LIMIT_NUM_CANDIDATES and len(positions) > self.config.PREFERRED_NUM_CANDIDATES:
                 break
         return positions
 

@@ -5,9 +5,11 @@ from dataclasses import dataclass, asdict
 @dataclass(frozen=True)
 class Config:
     
+    RANDOMIZE: bool = False
     LOG_RESIZE: bool = True
     LOG_PLACED: bool = True
     
+    ENABLE_LIMIT_NUM_CANDIDATES: bool = True
     PREFERRED_NUM_CANDIDATES: int = 50
     
     ENABLE_OPTIMAL_DISTANCE: bool = False
@@ -44,6 +46,9 @@ class Config:
     
     ENABLE_ORDER_BREAK: bool = True
     MUL_ORDER_BREAK: float = 10000.0
+    
+    ENABLE_BOUNDED_X: bool = True
+    MUL_BOUNDED_X: float = 10**6
     
     
     def set(self, attr: str, value) -> Config:

@@ -26,7 +26,8 @@ def main() -> None:
         # PENALTY_NOT_HEAVY=900,
         # PENALTY_BOUNDING_BREAK=9000000,
         # ORDER_BASE=57, PENALTY_NOT_HEAVY=269, PENALTY_BOUNDING_BREAK=1014454, 
-        ORDER_BASE=42.75, PENALTY_NOT_HEAVY=269, PENALTY_BOUNDING_BREAK=507227, 
+        ORDER_BASE=42.75, PENALTY_NOT_HEAVY=269, #PENALTY_BOUNDING_BREAK=507227,
+        PENALTY_BOUNDING_BREAK=259700.22400000005,
         
         MUL_X = 7.056158465317506, MUL_BOUNDING = 1.9355876185387513, MUL_WEIGHT = 62949116.06840276, MUL_SIDE_ALIGN = 5.498546002734376, MUL_ORDER_SKIP = 2.791446089212012, MUL_ORDER_BREAK = 24269.366582027556
     )
@@ -34,7 +35,8 @@ def main() -> None:
     runner = get_runner(['training1', 'training2'])
     score = runner(config)
     print('baseline: {}'.format(score))
-    for step, depth in [(0.2, 2), (0.2, 2), (0.1, 4)]:
+    print('----------------------------------------------------------------')
+    for step, depth in [(0.2, 1), (0.2, 2), (0.1, 4)]:
         for attr in [
             'PENALTY_BOUNDING_BREAK',
             'ORDER_BASE',
