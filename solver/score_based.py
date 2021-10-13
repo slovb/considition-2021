@@ -6,7 +6,7 @@ from .solver import Solver
 class ScoreBased(Solver):
 
     def initialize(self):
-        self.set_min()
+        self.set_min(self.packages)
         ocLeft = [0]*5
         for p in self.packages:
             ocLeft[p.orderClass] += 1
@@ -15,30 +15,32 @@ class ScoreBased(Solver):
 
     
     def solve(self) -> list[PlacedPackage]:
-        # self.packages = sorted(self.packages, key=lambda p: p.orderClass, reverse=True)
-        # self.packages = sorted(self.packages, key=lambda p: p.weightClass, reverse=True)
+        self.packages = sorted(self.packages, key=lambda p: p.orderClass, reverse=True)
+        self.packages = sorted(self.packages, key=lambda p: p.weightClass, reverse=True)
         
         placed = set()
         
         while len(placed) < len(self.packages):
             packages = [package for package in self.packages if package.id not in placed]
+            self.set_min(packages)
 
-            heavyVolumes = sorted(self.volumes, key=lambda vol: (vol.pos.z, vol.pos.x))
+            # heavyVolumes = sorted(self.volumes, key=lambda vol: (vol.pos.z, vol.pos.x))
             otherVolumes = sorted(self.volumes, key=lambda vol: vol.pos.x)
+            heavyVolumes = sorted(otherVolumes, key=lambda vol: vol.support.can_support_heavy(), reverse=True)
             candidates: list[tuple[Package, Vector3, Volume]] = []
             for package in packages:
-                # if package.is_heavy():
-                #     self.volumes = heavyVolumes
-                # else:
-                #     self.volumes = otherVolumes
+                if package.is_heavy():
+                    self.volumes = heavyVolumes
+                else:
+                    self.volumes = otherVolumes
                 for j in range(6):
                     for where in self.where(package):
                         candidates.append((package,) + where)
-                    if j == 3:
+                    if j == 2:
                         package = package.rotate(package.dim.flip())
                     package = package.rotate(package.dim.permutate())
                 if len(candidates) == 0:
-                    print('did not finish')
+                    print('did not finish ({} remaining)'.format(len(packages)))
                     return self.placed_packages
             package, pos, vol = min(candidates, key=lambda c: self.score(c[0], c[1], c[2]))
             self.place(package, pos, vol)
@@ -73,7 +75,7 @@ class ScoreBased(Solver):
         if self.config.ENABLE_ORDER_SKIP:
             score += self.penalty_order_skip(package, pos)
         if self.config.ENABLE_ORDER_BREAK:
-            score += self.order_break(package, vol)
+            score += self.order_break(package, pos, vol)
         if self.config.ENABLE_BOUNDED_X:
             score += self.score_bounded_x(package, pos)
         return score    
@@ -123,19 +125,34 @@ class ScoreBased(Solver):
         return (self.config.MUL_X * x)**self.config.EXP_X
 
     
+    '''
     def penalty_order_skip(self, package: Package, pos: Vector3) -> float:
         skips = self.ocLeft[:package.orderClass]
         score = 0
         for i, n in enumerate(skips):
             score += self.config.ORDER_BASE**(len(skips)-i) * n**self.config.EXP_ORDER_N
         return -(self.config.MUL_ORDER_SKIP * score) ** self.config.EXP_ORDER_SKIP
+    '''
     
     
-    def order_break(self, package: Package, vol: Volume) -> float:
-        # if E placed on A then big penalty
+    def penalty_order_skip(self, package: Package, pos: Vector3) -> float:
+        skips = self.ocLeft[package.orderClass + 1:]
         score = 0
-        for p in vol.support.beneath:
-            score += max(0, package.orderClass - p.orderClass)
+        if sum(skips) > 0:
+            score += self.config.ORDER_BASE_REDUCTION
+        for i, n in enumerate(skips):
+            score += self.config.ORDER_BASE**(len(skips)-i) * n**self.config.EXP_ORDER_N
+        return (self.config.MUL_ORDER_SKIP * score) ** self.config.EXP_ORDER_SKIP
+    
+    
+    def order_break(self, package: Package, pos: Vector3, vol: Volume) -> float:
+        def earlier_after(pp: PlacedPackage) -> bool:
+            return package.orderClass < pp.package.orderClass and \
+                (pos.x < pp.pos.x or (pos.x == pp.pos.x and pos.z < pp.pos.z))
+        score = 0
+        score += len([pp for pp in self.placed_packages if earlier_after(pp)])
+        # for p in vol.support.beneath:
+        #     score += max(0, package.orderClass - p.orderClass)
         return self.config.MUL_ORDER_BREAK * score
 
     
@@ -175,10 +192,10 @@ class ScoreBased(Solver):
         return positions
 
         
-    def set_min(self, id: int = 0):
-        self.min_x = min([p.dim.x for p in self.packages[id:]])
-        self.min_y = min([p.dim.y for p in self.packages[id:]])
-        self.min_z = min([p.dim.z for p in self.packages[id:]])
+    def set_min(self, packages: list[Package]) -> None:
+        self.min_x = min([p.dim.x for p in packages])
+        self.min_y = min([p.dim.y for p in packages])
+        self.min_z = min([p.dim.z for p in packages])
 
     
     def small(self, vol: Volume) -> bool:

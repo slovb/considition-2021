@@ -21,6 +21,12 @@ class Support:
         )
     
     
+    def can_support_heavy(self) -> bool:
+        if self.beneath is None:
+            return True
+        return all([p.weightClass == 2 for p in self.beneath])
+    
+    
     def calc_area(self) -> int:
         return self.area.calc_area()
 

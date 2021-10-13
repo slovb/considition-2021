@@ -20,6 +20,7 @@ def get_randomized_runner(maps: list[str]) -> Callable[[Config], int]:
         random.shuffle(game.packages)
     return lambda config: run_games(games, config)
 
+
 def get_runner(maps: list[str]) -> Callable[[Config], int]:
     games = [Game(api.new_game(api_key, map)) for map in maps]
     return lambda config: run_games(games, config)
@@ -35,9 +36,9 @@ def run_games(games: list[Game], config: Config) -> int:
     for game in games:
         placed_packages = game.solve(config)
         solution = [pp.as_solution() for pp in placed_packages]
-        submit_game_response = api.submit_game(api_key, game.name(), solution)
+        submit_game_response = api.submit_game(api_key, game.mapName(), solution)
         if submit_game_response is not None:
-            score += log.log_solution(fetcher, game.name(), submit_game_response)
+            score += log.log_solution(fetcher, game.mapName(), submit_game_response)
     return score
 
 

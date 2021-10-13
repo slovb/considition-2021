@@ -1,3 +1,4 @@
+from __future__ import annotations
 from dataclasses import dataclass
 
 from .vector import Vector3
@@ -13,6 +14,28 @@ class PlacedPackage:
 
     def key(self) -> tuple:
         return (self.pos.key(), self.package.key())
+    
+    
+    def move_without_volume(self, rel: Vector3) -> PlacedPackage:
+        return PlacedPackage(
+            pos=self.pos + rel,
+            package=self.package,
+            vol=None
+        )
+        
+    
+    def in_vehicle(self, vehicle: Vector3):
+        if self.pos.x < 0 or self.pos.y < 0 or self.pos.z < 0 or \
+           self.pos.x + self.package.dim.x > vehicle.x or \
+           self.pos.y + self.package.dim.y > vehicle.y or \
+           self.pos.z + self.package.dim.z > vehicle.z:
+               return False
+        return True
+    
+    
+    def check_collision_with(self, other: PlacedPackage) -> bool:
+        return self.pos.pairwise_less(other.pos + other.package.dim) and \
+               other.pos.pairwise_less(self.pos + self.package.dim)
 
 
     def corners(self) -> list[Vector3]:

@@ -18,7 +18,7 @@ class SimpleSearcher:
         self.runner = runner
         self.memory = {}
         self.options_builder = SimpleSearcher.scaling_options
-        self.step_max = 10
+        self.step_max = 5
         self.best_score = 0
         self.best_name = ''
 
@@ -41,7 +41,7 @@ class SimpleSearcher:
             results.append( (s, state) )
             return s
         max_score = lambda: max([s for s, _ in results])
-        least_state = lambda score: min([x for s, x in results if s == candidate_score], key=self.__state_value_sum)
+        least_state = lambda score: min([x for s, x in results if s == score], key=self.__state_value_sum)
         
         while True:
             score = run(state) # baseline

@@ -11,7 +11,7 @@ class Game:
         self.packages = self.parse_packages()
 
 
-    def name(self):
+    def mapName(self):
         return self.info['mapName']
 
     

@@ -20,7 +20,7 @@ class Vector2:
             clamp(self.x, lower.x, upper.x),
             clamp(self.y, lower.y, upper.y)
         )
-
+    
         
     def infinum(self, u: Vector2) -> Vector2:
         return Vector2(
@@ -61,6 +61,10 @@ class Vector3:
             self.y - other.y,
             self.z - other.z
         )
+
+    
+    def pairwise_less(self, rhs: Vector3) -> bool:
+        return self.x < rhs.x and self.y < rhs.y and self.z < rhs.z
 
 
     def permutate(self) -> Vector3:

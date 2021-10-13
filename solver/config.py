@@ -39,6 +39,7 @@ class Config:
     EXP_BOUNDING: float = 1.0
     
     ENABLE_ORDER_SKIP: bool = True
+    ORDER_BASE_REDUCTION: int = 1000
     ORDER_BASE: int = 10
     EXP_ORDER_N: int = 2
     MUL_ORDER_SKIP: float = 1.0

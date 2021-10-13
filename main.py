@@ -16,9 +16,9 @@ def main(maps: list[str]) -> None:
     for game in games:
         placed_packages = game.solve(None)
         solution = [pp.as_solution() for pp in placed_packages]
-        submit_game_response = api.submit_game(api_key, game.name(), solution)
+        submit_game_response = api.submit_game(api_key, game.mapName(), solution)
         if submit_game_response is not None:
-            score = log.log_solution(fetcher, game.name(), submit_game_response)
+            score = log.log_solution(fetcher, game.mapName(), submit_game_response)
             print()
 
 
