@@ -5,9 +5,14 @@ from solver.config import Config
 from solver.config_op import *
 from log import log
 
-same = lambda value, _: value
-madd = lambda value, step: value * (1.0 + step)
-mrem = lambda value, step: value * (1.0 - step)
+
+def same(value, _):
+    return value
+def madd(value, step):
+    return value * (1.0 + step)
+def mrem(value, step):
+    return value * (1.0 - step)
+
 
 anotherStep = lambda state: tuple([(name, stepper(value, step), step, stepper) for name, value, step, stepper in state])
 
@@ -21,6 +26,7 @@ class SimpleSearcher:
         self.step_max = 5
         self.best_score = 0
         self.best_name = ''
+        self.results: list[int, tuple] = []    
 
 
     @staticmethod
@@ -32,16 +38,18 @@ class SimpleSearcher:
             (name, madd(value, step), step, madd)] for name, value, step, _ in state]
 
 
-    def search(self, config: Config, settings) -> tuple[ConfigOp, int]:
+    def search(self, config: Config, settings, baseline: int = None) -> tuple[ConfigOp, int]:
         state = tuple([(name, value, step, same) for name, value, step in settings]) # describe the datacube as name, value, radius tripplets
+        if baseline is not None:
+            self.results.append( (baseline, state) )
+            self.memory[set_ops(state).name] = baseline
         
-        results: list[int, tuple] = []
         def run(state):
             s = self.__run(config, state)
-            results.append( (s, state) )
+            self.results.append( (s, state) )
             return s
-        max_score = lambda: max([s for s, _ in results])
-        least_state = lambda score: min([x for s, x in results if s == score], key=self.__state_value_sum)
+        max_score = lambda: max([s for s, _ in self.results])
+        least_state = lambda score: min([x for s, x in self.results if s == score], key=self.__state_value_sum)
         
         while True:
             score = run(state) # baseline
@@ -52,14 +60,25 @@ class SimpleSearcher:
             for option_state in random.sample(states, len(states)): # random iteration because greed
                 if all([stepper == same for _, _, _, stepper in option_state]): # don't do the non-step
                     continue
+                print('-' * 40)
+                print(', '.join([stepper.__name__ for _, _, _, stepper in option_state]))
                 option_score = run(option_state)
+                if option_score < score:
+                    continue
+                
+                last_state = option_state
                 for _ in range(self.step_max):
-                    if option_score > score: # if improved, we'll be done, but keep looking in this direction, just in case
-                        done = True
-                    elif option_score < score: # if not an improvement, drop it
-                        break
-                    option_state = anotherStep(option_state)
-                    option_score = run(option_state)
+                    last_state = anotherStep(last_state)
+                last_score = run(last_state)
+                if last_score != option_score: # avoid stagnation
+                    for _ in range(self.step_max):
+                        if option_score > score: # if improved, we'll be done, but keep looking in this direction, just in case
+                            score = option_score
+                            done = True
+                        elif option_score < score: # if not an improvement, drop it
+                            break
+                        option_state = anotherStep(option_state)
+                        option_score = run(option_state)
                 if done or option_score > score:
                     break
 
@@ -88,7 +107,7 @@ class SimpleSearcher:
 
     def __display(self, score: int, name: str) -> None:
         print('Sum:  {}, {}\nBest: {}, {}'.format(score, name, self.best_score, self.best_name))
-        print('----------------------------------------------------------------')
+        print('')
 
 
     def __run(self, config: Config, state: tuple) -> int:

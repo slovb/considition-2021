@@ -37,8 +37,9 @@ def run_games(games: list[Game], config: Config) -> int:
         placed_packages = game.solve(config)
         solution = [pp.as_solution() for pp in placed_packages]
         submit_game_response = api.submit_game(api_key, game.mapName(), solution)
-        if submit_game_response is not None:
-            score += log.log_solution(fetcher, game.mapName(), submit_game_response)
+        if submit_game_response is None:
+            break
+        score += log.log_solution(fetcher, game.mapName(), submit_game_response)
     return score
 
 

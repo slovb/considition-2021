@@ -41,7 +41,7 @@ class Volume:
 
 
     def package_inside_at(self, package: model.package.Package, pos: Vector3) -> bool:
-        return self.pos_inside(pos) and self.pos_inside(pos + package.dim)
+        return  self.pos_inside(pos + package.dim) and self.pos_inside(pos)
 
     
     def vol_intersect(self, vol: Volume) -> bool:
