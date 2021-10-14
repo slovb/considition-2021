@@ -14,6 +14,10 @@ class Support:
         return (self.area.key(), ) # ignore beneath for now
     
     
+    def weights_beneath(self) -> tuple:
+        return tuple() if self.beneath is None else tuple([p.weightClass for p in self.beneath])
+    
+    
     def add_beneath(self, beneath: tuple) -> Support:
         return Support(
             area = self.area,

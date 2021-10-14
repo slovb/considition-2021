@@ -1,6 +1,13 @@
+from typing import Callable
 from model import PlacedPackage, Package, Vector3, Volume
 
 from .solver import Solver
+
+
+def memoize(key, memory: dict, calc: Callable):
+    if key not in memory:
+        memory[key] = calc()
+    return memory[key]
 
 
 class ScoreBased(Solver):
@@ -12,6 +19,12 @@ class ScoreBased(Solver):
             ocLeft[p.orderClass] += 1
         self.ocLeft = ocLeft
         self.maxX = 0
+        self.memory_order_skip = {}
+        self.memory_not_heavy = {}
+        self.memory_weight = {}
+        self.memory_side_align = {}
+        self.memory_volume = {}
+        self.memory_x = {}
 
     
     def solve(self) -> list[PlacedPackage]:
@@ -42,6 +55,7 @@ class ScoreBased(Solver):
                 if len(candidates) == 0:
                     print('did not finish ({} remaining)'.format(len(packages)))
                     return self.placed_packages
+            self.reset_score_memory()
             package, pos, vol = min(candidates, key=lambda c: self.score(c[0], c[1], c[2]))
             self.place(package, pos, vol)
             placed.add(package.id)
@@ -58,6 +72,12 @@ class ScoreBased(Solver):
         return self.placed_packages
 
 
+    def reset_score_memory(self):
+        self.memory_order_break = {}
+        self.memory_bounding = {}
+        self.memory_bounded_x = {}
+
+
     def score(self, package: Package, pos: Vector3, vol: Volume):
         score = 0
         if self.config.ENABLE_OPTIMAL_DISTANCE:
@@ -72,8 +92,10 @@ class ScoreBased(Solver):
             score += self.score_x(package, pos)
         if self.config.ENABLE_BOUNDING:
             score += self.score_bounding(package, pos)
+        if self.config.ENABLE_VOLUME:
+            score += self.score_volume(package)
         if self.config.ENABLE_ORDER_SKIP:
-            score += self.penalty_order_skip(package, pos)
+            score += self.penalty_order_skip(package)
         if self.config.ENABLE_ORDER_BREAK:
             score += self.order_break(package, pos, vol)
         if self.config.ENABLE_BOUNDED_X:
@@ -93,36 +115,60 @@ class ScoreBased(Solver):
   
 
     def penalty_not_heavy(self, package: Package) -> int:
-        if not package.is_heavy():
-            return self.config.PENALTY_NOT_HEAVY
-        return 0
+        def calc():
+            if not package.is_heavy():
+                return self.config.PENALTY_NOT_HEAVY
+            return 0
+        return memoize(
+            package.weightClass,
+            self.memory_not_heavy,
+            calc
+        )
 
 
     def score_weight(self, package: Package, pos: Vector3, vol: Volume) -> float:
-        if not package.is_heavy():
-            return 0
-        score = 0
-        for p in vol.support.beneath:
-            wc = p.weightClass
-            if wc == 0:
-                score += self.config.PENALTY_HEAVY_ON_LIGHT
-            elif wc == 1:
-                score += self.config.PENALTY_HEAVY_ON_MEDIUM
-            else:
-                score += self.config.PENALTY_HEAVY_ON_HEAVY
-        return self.config.MUL_WEIGHT * score
+        def calc():
+            if not package.is_heavy():
+                return 0
+            score = 0
+            for p in vol.support.beneath:
+                wc = p.weightClass
+                if wc == 0:
+                    score += self.config.PENALTY_HEAVY_ON_LIGHT
+                elif wc == 1:
+                    score += self.config.PENALTY_HEAVY_ON_MEDIUM
+                else:
+                    score += self.config.PENALTY_HEAVY_ON_HEAVY
+            return self.config.MUL_WEIGHT * score
+        return memoize(
+            (package.weightClass) if package.weightClass < 2 else (package.weightClass, vol.support.weights_beneath()),
+            self.memory_weight,
+            calc
+        )
 
 
     def score_side_align(self, package: Package, pos: Vector3) -> float:
-        return self.config.MUL_SIDE_ALIGN * min(
-            pos.y,
-            self.vehicle.y - pos.y - package.dim.y
+        def calc():
+            return self.config.MUL_SIDE_ALIGN * min(
+                pos.y,
+                self.vehicle.y - pos.y - package.dim.y
+            )
+        return memoize(
+            (pos.y, package.dim.y),
+            self.memory_side_align,
+            calc
         )
 
     
     def score_x(self, package: Package, pos: Vector3) -> float:
-        x = pos.x + package.dim.x / 2
-        return (self.config.MUL_X * x)**self.config.EXP_X
+        def calc():
+            x = pos.x + package.dim.x / 2
+            return (self.config.MUL_X * x)**self.config.EXP_X
+        return memoize(
+            (pos.x, package.dim.x),
+            self.memory_x,
+            calc
+        )
 
     
     '''
@@ -135,36 +181,69 @@ class ScoreBased(Solver):
     '''
     
     
-    def penalty_order_skip(self, package: Package, pos: Vector3) -> float:
-        skips = self.ocLeft[package.orderClass + 1:]
-        score = 0
-        if sum(skips) > 0:
-            score += self.config.ORDER_BASE_REDUCTION
-        for i, n in enumerate(skips):
-            score += self.config.ORDER_BASE**(len(skips)-i) * n**self.config.EXP_ORDER_N
-        return (self.config.MUL_ORDER_SKIP * score) ** self.config.EXP_ORDER_SKIP
-    
-    
-    def order_break(self, package: Package, pos: Vector3, vol: Volume) -> float:
-        def earlier_after(pp: PlacedPackage) -> bool:
-            return package.orderClass < pp.package.orderClass and \
-                (pos.x < pp.pos.x or (pos.x == pp.pos.x and pos.z < pp.pos.z))
-        score = 0
-        score += len([pp for pp in self.placed_packages if earlier_after(pp)])
-        # for p in vol.support.beneath:
-        #     score += max(0, package.orderClass - p.orderClass)
-        return self.config.MUL_ORDER_BREAK * score
+    def penalty_order_skip(self, package: Package) -> float:
+        def calc():
+            skips = self.ocLeft[package.orderClass + 1:]
+            score = 0
+            if sum(skips) > 0:
+                score += self.config.ORDER_BASE_REDUCTION
+            for i, n in enumerate(skips):
+                score += self.config.ORDER_BASE**(len(skips)-i) * n**self.config.EXP_ORDER_N
+            return (self.config.MUL_ORDER_SKIP * score) ** self.config.EXP_ORDER_SKIP
+        return memoize(
+            package.orderClass,
+            self.memory_order_skip,
+            calc
+        )
 
     
+    def order_break(self, package: Package, pos: Vector3, vol: Volume) -> float:
+        def calc():
+            def earlier_after(pp: PlacedPackage) -> bool:
+                return package.orderClass < pp.package.orderClass and \
+                    (pos.x < pp.pos.x or (pos.x == pp.pos.x and pos.z < pp.pos.z))
+            score = 0
+            score += len([pp for pp in self.placed_packages if earlier_after(pp)])
+            # for p in vol.support.beneath:
+            #     score += max(0, package.orderClass - p.orderClass)
+            return self.config.MUL_ORDER_BREAK * score
+        return memoize(
+            (package.orderClass, pos.x, pos.z),
+            self.memory_order_break,
+            calc
+        )
+
+
+    def score_volume(self, package: Package):
+        def calc():
+            return -package.calc_volume() * self.config.MUL_VOLUME
+        return memoize(
+            package.id,
+            self.memory_volume,
+            calc
+        )
+    
+    
     def score_bounding(self, package: Package, pos: Vector3) -> float:
-        b = -package.calc_volume()
-        if not self.bounding_volume.package_inside_at(package, pos):
-            b += self.config.PENALTY_BOUNDING_BREAK
-        return (self.config.MUL_BOUNDING * b) ** self.config.EXP_BOUNDING
+        def calc():
+            if self.bounding_volume.package_inside_at(package, pos):
+                return 0
+            return (self.config.MUL_BOUNDING * self.config.PENALTY_BOUNDING_BREAK) ** self.config.EXP_BOUNDING
+        return memoize(
+            (pos.key(), package.dim.key()),
+            self.memory_bounding,
+            calc
+        )
 
 
     def score_bounded_x(self, package: Package, pos: Vector3) -> float:
-        return self.config.MUL_BOUNDED_X * max(0, package.dim.x + pos.x - self.maxX)
+        def calc():
+            return self.config.MUL_BOUNDED_X * max(0, package.dim.x + pos.x - self.maxX)
+        return memoize(
+            (pos.x, package.dim.x), 
+            self.memory_bounded_x,
+            calc
+        )
 
 
     def where(self, package: Package) -> list[tuple[Vector3, Volume]]:

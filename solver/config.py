@@ -38,6 +38,9 @@ class Config:
     MUL_BOUNDING: float = 1.0
     EXP_BOUNDING: float = 1.0
     
+    ENABLE_VOLUME: bool = True
+    MUL_VOLUME: float = 1.0
+    
     ENABLE_ORDER_SKIP: bool = True
     ORDER_BASE_REDUCTION: int = 1000
     ORDER_BASE: int = 10
