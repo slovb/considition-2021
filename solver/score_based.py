@@ -37,9 +37,9 @@ class ScoreBased(Solver):
             packages = [package for package in self.packages if package.id not in placed]
             self.set_min(packages)
 
-            # heavyVolumes = sorted(self.volumes, key=lambda vol: (vol.pos.z, vol.pos.x))
+            heavyVolumes = sorted(self.volumes, key=lambda vol: (vol.pos.z, vol.pos.x))
             otherVolumes = sorted(self.volumes, key=lambda vol: vol.pos.x)
-            heavyVolumes = sorted(otherVolumes, key=lambda vol: vol.support.can_support_heavy(), reverse=True)
+            # heavyVolumes = sorted(otherVolumes, key=lambda vol: vol.support.can_support_heavy(), reverse=True)
             candidates: list[tuple[Package, Vector3, Volume]] = []
             for package in packages:
                 if package.is_heavy():
@@ -185,8 +185,8 @@ class ScoreBased(Solver):
         def calc():
             skips = self.ocLeft[package.orderClass + 1:]
             score = 0
-            if sum(skips) > 0:
-                score += self.config.ORDER_BASE_REDUCTION
+            # if sum(skips) > 0:
+            #     score += self.config.ORDER_BASE_REDUCTION
             for i, n in enumerate(skips):
                 score += self.config.ORDER_BASE**(len(skips)-i) * n**self.config.EXP_ORDER_N
             return (self.config.MUL_ORDER_SKIP * score) ** self.config.EXP_ORDER_SKIP

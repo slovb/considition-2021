@@ -78,12 +78,12 @@ def post_process(placed_packages: list[PlacedPackage], vehicle: Vector3) -> list
     sort = lambda pps: sorted(pps, key=lambda pp: pp.pos.key())
     placed_packages: list[PlacedPackage] = sort(placed_packages)
     
-    def validPackage(pp: PlacedPackage, pps: list[PlacedPackage]) -> bool:
+    def valid_package(pp: PlacedPackage, pps: list[PlacedPackage]) -> bool:
         return pp.in_vehicle(vehicle) and not any(pp.check_collision_with(other) for other in pps)
     def move(pp: PlacedPackage, pps: list[PlacedPackage], move: Vector3) -> PlacedPackage:
         new = pp
         new = new.move_without_volume(move)
-        while validPackage(new, pps):
+        while valid_package(new, pps):
             yield new
             new = new.move_without_volume(move)
     

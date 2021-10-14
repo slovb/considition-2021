@@ -8,10 +8,14 @@ from log import log
 
 def same(value, _):
     return value
+# def madd(value, step):
+#     return value * (1.0 + step)
+# def mrem(value, step):
+#     return value * (1.0 - step)
 def madd(value, step):
-    return value * (1.0 + step)
+    return value * step
 def mrem(value, step):
-    return value * (1.0 - step)
+    return value / step
 
 
 anotherStep = lambda state: tuple([(name, stepper(value, step), step, stepper) for name, value, step, stepper in state])

@@ -11,50 +11,89 @@ fetcher = lambda id: api.fetch_game(api_key, id)['gameStats']
 
 
 def main(maps: list[str]) -> None:
-    config = Config(
-        LOG_RESIZE=False,
-        LOG_PLACED=False,
-        ENABLE_LIMIT_NUM_CANDIDATES=False,
-        PREFERRED_NUM_CANDIDATES=150,
+    # config = Config(
+    #     LOG_RESIZE=False,
+    #     LOG_PLACED=False,
+    #     ENABLE_LIMIT_NUM_CANDIDATES=False,
+    #     PREFERRED_NUM_CANDIDATES=150,
         
+    #     ENABLE_OPTIMAL_DISTANCE=False,
+    #     MUL_OPTIMAL_X=1.0,
+    #     MUL_OPTIMAL_Y=1.0,
+    #     MUL_OPTIMAL_Z=1.0,
+        
+    #     ENABLE_HEAVY_PRIORITY=True,
+    #     PENALTY_NOT_HEAVY=42.15992028364802,
+        
+    #     ENABLE_WEIGHT=True,
+    #     PENALTY_HEAVY_ON_LIGHT=45.927,
+    #     PENALTY_HEAVY_ON_MEDIUM=11.1537,
+    #     PENALTY_HEAVY_ON_HEAVY=0,
+    #     MUL_WEIGHT=27036.439482589834,
+        
+    #     ENABLE_SIDE_ALIGN=True,
+    #     MUL_SIDE_ALIGN=1.1261022213600007,
+        
+    #     ENABLE_X=True,
+    #     MUL_X=6.985596880664332,
+    #     EXP_X=1.9800000000000002,
+        
+    #     ENABLE_BOUNDING=True,
+    #     PENALTY_BOUNDING_BREAK=88329.8219153818,
+    #     MUL_BOUNDING=1.9355876185387513,
+    #     EXP_BOUNDING=1.0,
+        
+    #     ENABLE_ORDER_SKIP=True,
+    #     # ORDER_BASE_REDUCTION=1000,
+    #     ORDER_BASE=20.287098,
+    #     EXP_ORDER_N=2,
+    #     MUL_ORDER_SKIP=1.6279713592284457,
+    #     EXP_ORDER_SKIP=2.4200000000000004,
+        
+    #     ENABLE_ORDER_BREAK=True,
+    #     MUL_ORDER_BREAK=8.143448106597244e3,
+        
+    #     ENABLE_BOUNDED_X=True,
+    #     MUL_BOUNDED_X=178120.88369971208,
+    # )
+    
+    config = Config(
+        RANDOMIZE=False,
+        LOG_RESIZE=True,
+        LOG_PLACED=True,
+        ENABLE_LIMIT_NUM_CANDIDATES=True,
+        PREFERRED_NUM_CANDIDATES=250,
         ENABLE_OPTIMAL_DISTANCE=False,
         MUL_OPTIMAL_X=1.0,
         MUL_OPTIMAL_Y=1.0,
         MUL_OPTIMAL_Z=1.0,
-        
-        ENABLE_HEAVY_PRIORITY=True,
+        ENABLE_HEAVY_PRIORITY=False,
         PENALTY_NOT_HEAVY=42.15992028364802,
-        
-        ENABLE_WEIGHT=True,
+        ENABLE_WEIGHT=False,
         PENALTY_HEAVY_ON_LIGHT=45.927,
         PENALTY_HEAVY_ON_MEDIUM=11.1537,
         PENALTY_HEAVY_ON_HEAVY=0,
-        MUL_WEIGHT=27036.439482589834,
-        
+        MUL_WEIGHT=51507.10771672026,
         ENABLE_SIDE_ALIGN=True,
         MUL_SIDE_ALIGN=1.1261022213600007,
-        
         ENABLE_X=True,
         MUL_X=6.985596880664332,
         EXP_X=1.9800000000000002,
-        
-        ENABLE_BOUNDING=True,
+        ENABLE_BOUNDING=False,
         PENALTY_BOUNDING_BREAK=88329.8219153818,
-        MUL_BOUNDING=1.9355876185387513,
+        MUL_BOUNDING=1.548470094831001,
         EXP_BOUNDING=1.0,
-        
-        ENABLE_ORDER_SKIP=True,
-        ORDER_BASE_REDUCTION=1000,
+        ENABLE_VOLUME=True,
+        MUL_VOLUME=-1.9355876185387513,
+        ENABLE_ORDER_SKIP=False,
         ORDER_BASE=20.287098,
-        EXP_ORDER_N=2,
-        MUL_ORDER_SKIP=1.6279713592284457,
+        EXP_ORDER_N=1.0240000000000002,
+        MUL_ORDER_SKIP=3.320194270278251,
         EXP_ORDER_SKIP=2.4200000000000004,
-        
-        ENABLE_ORDER_BREAK=True,
-        MUL_ORDER_BREAK=8.143448106597244e3,
-        
-        ENABLE_BOUNDED_X=True,
-        MUL_BOUNDED_X=178120.88369971208,
+        ENABLE_ORDER_BREAK=False,
+        MUL_ORDER_BREAK=27219.82709815412,
+        ENABLE_BOUNDED_X=False,
+        MUL_BOUNDED_X=133824.85627326224
     )
     
     games = [Game(api.new_game(api_key, map)) for map in maps]
